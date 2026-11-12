@@ -3849,8 +3849,12 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     rh = LH_STAIR_R + 0.07
     _polar_slab(mb, rh, _lh_ri(zt) + 0.04, 0.0, 360.0, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood",
                 "M_IntWoodDark", caps=False)
-    _polar_slab(mb, 0.15, rh, a_top, a_top + 110.0, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood", "M_IntWoodDark")
-    rail = [_polar(rh, a_top + 110.0 + k * 10.0)[:2] for k in range(int((360.0 - 130.0) / 10.0) + 1)]
+    # landing beside the stair top: three treads long.  It hangs over the turn below, where the stair is
+    # 3.0 m lower at its near end and gains 19 cm per tread - five treads (110 deg) long it left 1.74 m of
+    # headroom over the tread just past its far edge, 10 cm short for the 1.84 m character capsule.
+    land = 3 * LH_STEP
+    _polar_slab(mb, 0.15, rh, a_top, a_top + land, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood", "M_IntWoodDark")
+    rail = [_polar(rh, a_top + land + k * 10.0)[:2] for k in range(int((360.0 - land - 20.0) / 10.0) + 1)]
     K.railing(mb, rail, zt, h=1.0, mat=K.TRIM_WOOD, spacing=0.18)
     K.spiral_stairs(mb, 0.0, 0.0, 0.95, zt, 0.15, LH_STAIR_R, a0=a_start, step_deg=LH_STEP, mat=STEEL,
                     core=LH_R, rail=None)
@@ -3886,7 +3890,10 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     for i in range(n_steps):
         am = math.radians(a_start + LH_STEP * (i + 0.5) + 1.0)
         z = 0.95 + rise * (i + 1)
-        p = (math.cos(am) * (LH_STAIR_R - 0.05), math.sin(am) * (LH_STAIR_R - 0.05))
+        # just outside the treads (in the gap to the gallery rings): on the treads it left 77 cm between the
+        # newel and the rail, less than the 76 cm character capsule needs once the rail's straight segments
+        # cut the corners (Tools/world/check_reachability.py)
+        p = (math.cos(am) * (LH_STAIR_R + 0.03), math.sin(am) * (LH_STAIR_R + 0.03))
         if i in skip:
             prev = None
             continue

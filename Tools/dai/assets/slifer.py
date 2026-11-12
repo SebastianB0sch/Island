@@ -197,7 +197,9 @@ def _rooms(aset, mb, nc):
             # ---- WC in the back-left corner (vent window above the toilet)
             wx1 = x0 + 1.7
             K.wall(aset, mb, (rx0, 2.95), (wx1, 2.95), zr, ceil - zr, 0.1, IN_WALL, inner=K.PLASTER_SKY,
-                   openings=[K.Door((wx1 - rx0) / 2, 0.75, 2.0, "slifer_inner", trim=K.TRIM_WOOD)])
+                   # 0.85 m wide at the bed end of the wall: the old 0.75 m door (0.74 clear of its lining) was
+                   # narrower than the 0.76 m character capsule, and centred it opened onto the wardrobe's side
+                   openings=[K.Door(wx1 - rx0 - 0.1 - 0.425, 0.85, 2.0, "slifer_inner", trim=K.TRIM_WOOD)])
             K.wall(aset, mb, (wx1, 2.95), (wx1, ry1), zr, ceil - zr, 0.1, IN_WALL, inner=K.PLASTER_SKY)
             with mb.at((0, 0, zr)):
                 K.toilet_room(mb, rx0, 3.05, wx1 - 0.1, ry1)
@@ -213,10 +215,12 @@ def _rooms(aset, mb, nc):
                     K.bunk_bed(mb, nc, rx1 - 0.52, 1.75, -90.0, levels=3,
                                blankets=blankets_all[0] if jaden else rng.choice(blankets_all[1:]), gap=0.6,
                                length=2.0, width=0.92)
-                    K.kotatsu(mb, nc, x0 + 1.95, 0.85, 0.0, quilt=rng.choice(("M_IntFabricOrange", "M_IntFabricRed",
+                    # towards the wardrobe side: centred (x0 + 1.95) its 1.4 m quilt left 58 cm to the bunk and
+                    # 58 cm to the wardrobe corner - no way past it to the back of the room for a 76 cm capsule
+                    K.kotatsu(mb, nc, x0 + 1.55, 0.85, 0.0, quilt=rng.choice(("M_IntFabricOrange", "M_IntFabricRed",
                                                                                 "M_IntFabricBlue")))
                 K.desk(mb, nc, x0 + 2.95, ry0 + 0.32, 180.0, w=1.1, d=0.55, hutch=False, rng_seed=i + floor * 10)
-                K.wardrobe(mb, rx0 + 0.31, 2.25, 90.0, w=1.2, d=0.6, h=min(2.0, ceil - zr - 0.15))
+                K.wardrobe(mb, rx0 + 0.26, 2.25, 90.0, w=1.2, d=0.5, h=min(2.0, ceil - zr - 0.15))
                 # shoe shelf in the genkan (rests on the concrete, 7 cm below the raised floor)
                 mb.box_mm((rx0, ry0 + 0.05, -STEP + 0.01), (rx0 + 0.32, ry0 + 0.85, 0.85 - STEP + 0.01), K.WOOD)
                 for k in range(3):

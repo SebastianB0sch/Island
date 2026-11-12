@@ -1039,18 +1039,24 @@ def _gallery(aset, mb, nc, rng, sx):
     y0, y1 = AY0, AY1
     z = ZG
     mb.box_mm((lo, y0, z), (hi, y1, z + 0.012), "M_GalleryFloor", skip=("-z",))
-    # stair (19 x 0.18 m risers, 0.28 m treads) and the landing at the roof edge
-    K.stairs(mb, sx * 11.48, -9.4, FLG, z, 0.0 if sx > 0 else 180.0, 1.0, mat=K.METAL, stringer="M_DarkMetal",
-             rail="M_Metal", rail_sides=(1, -1))
-    la, lb = sorted((sx * AX, sx * (AX + 0.8)))
+    # stair (0.18 m risers, 0.28 m treads) ending exactly at the landing on the roof edge.  K.stairs picks the
+    # riser count itself (18 here): started at a fixed x = 11.48 "for 19 risers" the flight stopped 26 cm short
+    # of the landing and left a slot open to the court 3 m below.
+    n_st = max(2, int(round((z - FLG) / 0.18)))
+    K.stairs(mb, sx * (AX - 0.28 * n_st), -9.4, FLG, z, 0.0 if sx > 0 else 180.0, 1.0, mat=K.METAL,
+             stringer="M_DarkMetal", rail="M_Metal", rail_sides=(1, -1))
+    # landing 1.2 m long: with 0.8 m the way off it into the gallery, between the end rail and the first post
+    # of the edge railing, was 76 cm - exactly the character capsule
+    LAND = 1.2
+    la, lb = sorted((sx * AX, sx * (AX + LAND)))
     mb.box_mm((la, -9.9, z - 0.12), (lb, -8.9, z), K.METAL, mats={"+z": "M_GalleryFloor"})
     for xx in (la + 0.04, lb - 0.04):
         mb.box((xx, -8.95, (FLG + z) / 2), (0.08, 0.08, z - FLG), "M_DarkMetal")
-    xe = sx * (AX + 0.8)
+    xe = sx * (AX + LAND)
     mb.railing([(xe, -9.9, z), (xe, -8.9, z)], 1.0, "M_Metal", post_spacing=1.0)
     mb.railing([(la, -8.9, z), (lb, -8.9, z)], 1.0, "M_Metal", post_spacing=0.6)
     # railing along the gallery edge and the end, leaving the landing open
-    xa = sx * (AX + 0.85)
+    xa = sx * (AX + LAND + 0.05)
     mb.railing([(xa, y1 - 0.04, z), (sx * (GX1 - WT - 0.05), y1 - 0.04, z)], 1.05, "M_Metal", post_spacing=1.6)
     # end rail only beside the stair landing: the rest of the end opens onto the front gallery over the foyer
     mb.railing([(sx * (AX + 0.04), y1 - 0.04, z), (sx * (AX + 0.04), FG_Y1 + 0.05, z)], 1.05, "M_Metal", post_spacing=0.6)
