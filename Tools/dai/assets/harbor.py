@@ -3644,8 +3644,9 @@ def _dressing(aset):
     aset.prop("SM_Rowboat", (185.0, QY - 3.2, WATER), 2.0)
     aset.prop("SM_Rowboat", (214.0, QY - 3.4, WATER), -4.0)
     aset.prop("SM_Rowboat", (-200.0, QY - 3.3, WATER), 3.0)
-    # fishing trawlers tied up along the quay
-    aset.prop("SM_FishingBoat", (150.0, QY - 3.4, WATER), 180.0)
+    # fishing trawlers tied up along the quay (the east one clear of the breakwater's embankment, which starts
+    # beside the quay at x ~ 150)
+    aset.prop("SM_FishingBoat", (118.0, QY - 3.4, WATER), 180.0)
     aset.prop("SM_FishingBoat", (-170.0, QY - 3.5, WATER), 0.0)
     # arrival from the academy road: signpost + harbor map board
     aset.prop("SM_Signpost", (-9.0, 42.0, 0.0), 180.0)

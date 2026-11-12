@@ -30,10 +30,8 @@ TAU = math.pi * 2.0
 # roughly the shore line).  The deck runs from there towards -Y (rotated by JETTY_YAW, CCW
 # degrees) for JETTY_LENGTH metres; the ramp climbs from the deck (z=-2.4) back towards +Y
 # up to JETTY_LAND_Z over 6 m and ends in a 3 m landing.  Stone sides reach down to -6, so
-# whatever the bank height is, the causeway reads as a little stone pier.  The root sits where the landing's
-# end meets the bank at JETTY_LAND_Z on the generated terrain (the bank drops from -1.06 at y -84 to -3.7 at
-# y -91): at y -100 the landing ended 2.5 m above the ground and the jetty could not be walked onto.
-JETTY_OFFSET = (10.0, -93.5)
+# whatever the bank height is, the causeway reads as a little stone pier.
+JETTY_OFFSET = (0.0, -100.0)       # on the axis of the garden walk; the lake's arm (config.LAKE_INLETS) reaches it
 JETTY_YAW = 0.0
 JETTY_LAND_Z = -1.2
 JETTY_LENGTH = 25.0

@@ -23,6 +23,80 @@ def resample(pts, step):
     return out
 
 
+ROAD_JOINT_RADIUS = 12.0     # m of curve before and after the corner where a road meets its extension
+
+
+def extended_line(own, ext, step=None):
+    """A path's line carried on by its extension (config.path_extension: start / end waypoints): (points,
+    joints), joints = the indices of the corners between the legs - where the path meets its extension and
+    the extension's own waypoints - for strips.round_joints. step: resample the extension's legs (m)."""
+    own = [tuple(q) for q in own]
+    start = [tuple(q) for q in ext.get("start", [])]
+    end = [tuple(q) for q in ext.get("end", [])]
+
+    def legs(wps):
+        """Points along a chain of waypoints and the index of each waypoint in them."""
+        if step is None:
+            return list(wps), list(range(len(wps)))
+        out, marks = [wps[0]], [0]
+        for a, b in zip(wps, wps[1:]):
+            seg = resample([a, b], step)[1:]
+            out += seg
+            marks.append(len(out) - 1)
+        return out, marks
+
+    pts, joints = [], []
+    if start:
+        lead, marks = legs(start + [own[0]])
+        pts = lead[:-1]
+        joints += marks[1:]
+    pts = pts + own
+    if end:
+        base = len(pts) - 1
+        tail, marks = legs([own[-1]] + end)
+        pts = pts + tail[1:]
+        joints += [base + m for m in marks[:-1]]
+    return pts, joints
+
+
+def round_joints(pts, joints, radius=12.0, step=2.0):
+    """Round the corners of a polyline at the vertex indices `joints` (a road and the stretch it is carried on
+    by meet at an angle there). The line within `radius` before and after each corner - measured along it, at
+    most 45 % of the way to the next joint or end, so two curves never overlap - becomes a quadratic Bezier
+    with the corner as its control point: tangent to both legs, so the road turns instead of kinking. All other
+    vertices stay as they are."""
+    pts = [tuple(p) for p in pts]
+    arc = [0.0]
+    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+        arc.append(arc[-1] + math.hypot(bx - ax, by - ay))
+    marks = sorted(set(j for j in joints if 0 < j < len(pts) - 1))
+    stops = [0.0] + [arc[j] for j in marks] + [arc[-1]]
+    plan = []
+    for i, j in enumerate(marks):
+        r = min(radius, 0.45 * (stops[i + 1] - stops[i]), 0.45 * (stops[i + 2] - stops[i + 1]))
+        if r >= 0.5:
+            plan.append((j, r))
+
+    def at(q):
+        for k in range(len(arc) - 1):
+            if arc[k + 1] >= q:
+                t = (q - arc[k]) / max(arc[k + 1] - arc[k], 1e-9)
+                return (pts[k][0] + (pts[k + 1][0] - pts[k][0]) * t, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * t)
+        return pts[-1]
+
+    out, done = [], 0.0          # walk the line once, replacing each corner's stretch by its curve
+    for j, r in plan:
+        s = arc[j]
+        out += [p for p, q in zip(pts, arc) if done - 1e-6 <= q < s - r - 1e-6 and (not out or p != out[-1])]
+        a, c, b = at(s - r), pts[j], at(s + r)
+        n = max(2, int(math.ceil(2.0 * r / step)))
+        out += [((1 - t) ** 2 * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0],
+                 (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]) for t in (k / n for k in range(n + 1))]
+        done = s + r + 1e-6
+    out += [p for p, q in zip(pts, arc) if q > done or (not plan and q >= 0.0)]
+    return out
+
+
 def smooth(pts, rounds=2):
     """Chaikin corner cutting; the two ends stay where they are."""
     for _ in range(rounds):

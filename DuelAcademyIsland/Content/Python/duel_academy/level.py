@@ -252,7 +252,9 @@ class Placer:
                                                                    unreal.Vector2D(float(hi[0]), y1)):
                     C.warn("water.json: wave mask rejected (size / data mismatch) - the sea keeps full waves")
             rivers = 0
-            for river in data.get("rivers") or []:
+            # the lake's arms reach beyond the ellipse the manager tests for the lake: they are added like the
+            # rivers (a flat sheet at the lake's level), so gameplay finds water wherever M_LakeWater is drawn
+            for river in list(data.get("rivers") or []) + list(data.get("inlets") or []):
                 packed = []
                 for p in river.get("points") or []:
                     if len(p) >= 4:
@@ -261,7 +263,7 @@ class Placer:
                     manager.add_river(str(river.get("id", f"river_{rivers}")), packed)
                     rivers += 1
             C.log(f"water: {len(ocean.get('waves') or [])} sea waves, {len(lake.get('waves') or [])} lake waves, "
-                  f"{rivers} rivers")
+                  f"{rivers} rivers and lake arms")
             return True
         except Exception as e:  # noqa: BLE001 - never lose the level over the water data
             C.warn(f"water.json could not be applied ({e}); the level keeps flat water")

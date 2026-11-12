@@ -46,7 +46,7 @@ class WaypointTests(unittest.TestCase):
         for pid in C.PATH_EXTENSIONS:
             self.assertIn(pid, ids)
             ext = C.path_extension(pid)
-            self.assertTrue(ext["start"] or ext["end"], pid)
+            self.assertTrue(ext["start"] or ext["end"] or ext.get("start_edge") or ext.get("end_edge"), pid)
             pts = ids[pid]["pts"]
             for side, anchor in (("start", pts[0]), ("end", pts[-1])):
                 way = ext[side] if side == "end" else ext[side][::-1]
@@ -57,7 +57,8 @@ class WaypointTests(unittest.TestCase):
                 edge = ext.get(side + "_edge")
                 if edge:
                     # the slab's edge is centred on the last waypoint and square to the way in
-                    last = ext[side][-1] if side == "end" else ext[side][0]
+                    # (a path that starts / ends on the slab itself has no waypoints: its own end point)
+                    last = (ext[side][-1] if side == "end" else ext[side][0]) if ext[side] else tuple(anchor)
                     mid = ((edge[0][0] + edge[1][0]) / 2, (edge[0][1] + edge[1][1]) / 2)
                     self.assertLess(math.hypot(mid[0] - last[0], mid[1] - last[1]), 0.05, pid)
         self.assertEqual(C.path_extension("main_road"), dict(start=[], end=[]))
