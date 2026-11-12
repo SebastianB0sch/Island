@@ -4357,18 +4357,8 @@ def _girls_building(mb, nc, aset):
     # ------------------------------------------------------------ roofs
     rh = 6.8
     dh = [(xd - 0.9, xd + 0.9, G_TOP - 0.01, G_TOP + 2.5) for xd in (-12.8, 12.8)]
-    # the pavilion's gable roof crosses the hip roof: the hip's planes stop at the valleys where the two meet
-    # (inside the pavilion they ran through the attic studio and landing at head height), its eaves at the
-    # pavilion's walls
-    hw_, hd_, ze_ = (x1 - x0) / 2 + 0.8, (y1 - y0) / 2 + 0.8, G_TOP - rh * 0.8 / ((y1 - y0) / 2)
-    km, kg = (G_TOP + rh - ze_) / hd_, 6.0 / 7.0          # hip slope (per m in y), gable slope (per m in x)
-    yv = (ze_ - (y0 - 0.8) * km)                          # z of the hip plane = yv + y * km on the south side
-    y7 = ((G_TOP + rh - 7.0 * kg) - yv) / km              # the valley meets the pavilion wall (x = +-7) there
-    ym = (y0 + y1) / 2
-    cut_s = [(-7.0, y0 - 1.0), (7.0, y0 - 1.0), (7.0, y7), (0.0, ym), (-7.0, y7)]
-    cut_n = [(-7.0, 2 * ym - y7), (0.0, ym), (7.0, 2 * ym - y7), (7.0, y1 + 1.0), (-7.0, y1 + 1.0)]
-    _hip_roof_walk(mb, 0.0, (y0 + y1) / 2, G_TOP, x1 - x0, y1 - y0, rh, GROOF, 0.8, 0.3, {"s": dh, "n": dh},
-                   cuts={"s": [cut_s], "n": [cut_n]}, eave_gaps={"s": [(-7.0, 7.0)], "n": [(-7.0, 7.0)]})
+    dh.append((G_PAV[0], G_PAV[2], G_TOP - 1.0, G_TOP + rh + 1.0))       # inside the pavilion (see above)
+    _hip_roof_walk(mb, 0.0, (y0 + y1) / 2, G_TOP, x1 - x0, y1 - y0, rh, GROOF, 0.8, 0.3, {"s": dh, "n": dh})
     mb.box_mm((-11.0, 14.93, G_TOP + rh - 0.02), (11.0, 15.07, G_TOP + rh + 0.18), GOLD)
     gh = 6.0
     _gable_roof_walk(mb, 0.0, py0, py1, px1 - px0, ptop, gh, GROOF, 0.38, 0.3)   # (eaves inside the wing attics' walls)

@@ -2594,6 +2594,7 @@ def _wing_upper(C, s):
     nwl = [x for x, _ in win_pos((88.0, WY1), (40.0, WY1), 14, 1.7) if x < x1 - 0.5]
     room_base(C, x0, y0, x1, y1, 60 + s, "japanese", win="+y", wl=nwl, z=z, lights=(2, 5), wains=K.WOOD,
               clear=[(x0, y0 + 2.0, x0 + 1.4, y1 - 2.0)])
+    desks = C.mark()
     # proctor's platform + blackboard on the drum-side wall, students face it (west)
     C.box(x0, y0 + 3.0, z, x0 + 1.4, y1 - 3.0, z + 0.2, "M_IntWood", mats={"+z": "M_IntWoodFloor"})
     C.blackboard(x0, (y0 + y1) / 2, z + 1.0, 90.0, 6.0, 1.3,
@@ -2605,7 +2606,6 @@ def _wing_upper(C, s):
         banner(C.nc, C.P(x0 + 0.06, yb, z + 3.25), C.F.yaw(90.0), 1.0, 1.9, col)
     C.prop("SM_Int_WallClock", x0 + 0.03, (y0 + y1) / 2, z + 2.75, 90.0)
     cols = [x0 + 2.4 + i * 1.3 for i in range(5)]
-    desks = C.mark()
     for j in range(13):
         y = y0 + 1.6 + j * 1.35
         for i, x in enumerate(cols):
@@ -2620,8 +2620,9 @@ def _wing_upper(C, s):
     C.prop("SM_Int_PottedPlantB", x1 - 0.45, y0 + 0.45, z, 0.0)
     C.prop("SM_Int_Extinguisher", x1 - 0.35, y0 + 1.2, z, -90.0)
     C.npc(x0 + 0.9, (y0 + y1) / 2, -90.0, "white", 1.5, z=z + 0.2)
-    # (between the desk rows the gaps are narrower than the player's capsule: stand clear of the desks)
-    C.npc_clear(desks, x0, y0, x1, y1, (cols[2] + 0.4, y0 + 1.6 + 1.35 * 4), -90.0, "slifer", 0.2, z=z)
+    # (between the desk rows the gaps are narrower than the player's capsule: stand clear of the desks and
+    # off the proctor's platform)
+    C.npc_clear(desks, x0 + 1.4, y0, x1, y1, (cols[2] + 0.4, y0 + 1.6 + 1.35 * 4), -90.0, "slifer", 0.2, z=z)
     C.cam(f"wing{side[0]}_exam_hall", (x1 - 0.5, y1 - 0.9, z + 1.7), (x0 + 0.5, y0 + 4.0, z + 0.9), 17)
     _wing_floors(C, s)
 
@@ -4244,7 +4245,12 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
             px, py = ((u, y0 + 0.3) if wall == "-y" else (u, y1 - 0.3) if wall == "+y"
                       else (x0 + 0.3, u) if wall == "-x" else (x1 - 0.3, u))
             C.prop("SM_Int_Drawers", px, py, z, {"-y": 180.0, "+y": 0.0, "-x": 90.0, "+x": -90.0}[wall])
-    C.npc(cx, cy, 0.0, ("slifer", "ra", "obelisk", "white")[seed % 4], 1.0, z=z)
+    if kind == "store":       # loose stock on the floor between the racks
+        for k in range(int(w * d / 12)):
+            px, py, a_ = xa + rnd.uniform(0.3, xb - xa - 0.3), y0 + 0.5 + (k * 1.37) % (d - 1.0), rnd.uniform(0, 360)
+            if not in_door_zone(px, py, 0.3):
+                C.prop(("SM_Int_Box", "SM_Int_Suitcase", "SM_Int_Bucket", "SM_Int_TrashBag")[k % 4], px, py, z, a_)
+    C.npc_clear(mark, x0, y0, x1, y1, (cx, cy), 0.0, ("slifer", "ra", "obelisk", "white")[seed % 4], 1.0, z=z)
     C.cam(cam, (x1 - 0.6 if dw < 0 else x0 + 0.6, y1 - 0.6, z + 1.65), (cx, y0 + 0.8, z + 0.8), 17)
 
 
