@@ -22,6 +22,7 @@ from scipy.interpolate import CubicSpline, RectBivariateSpline
 from . import atomic, cache
 from . import config as C
 from . import jsonio, palette
+from .shoreline import inlet_q, lake_q  # noqa: F401 - the lake's field (layout asks terrain.lake_q)
 
 # --------------------------------------------------------------------------- helpers
 STAMP_NAME = "terrain_cache.json"
@@ -490,12 +491,22 @@ class Terrain:
         lx = dx * math.cos(a) + dy * math.sin(a)
         ly = -dx * math.sin(a) + dy * math.cos(a)
         q = np.sqrt((lx / C.LAKE_RADII[0]) ** 2 + (ly / C.LAKE_RADII[1]) ** 2)
-        q = q + fbm(res, 150.0, 3, seed=C.SEED + 9) * 0.07
-        self.lake_q = q
+        noise = fbm(res, 150.0, 3, seed=C.SEED + 9) * 0.07
+        q = q + noise
         bottom = C.LAKE_LEVEL - 0.6 - 7.0 * np.clip(1.0 - q * q, 0, 1) ** 0.6
+        # the lake's arms: shallower, with banks of their own width, merged into the same q (one shoreline)
+        qa, depth = inlet_q(X, Y)
+        qa = (qa + noise).astype(np.float32)
+        self.inlet_q = qa
+        bottom = np.minimum(bottom, C.LAKE_LEVEL - 0.6 - depth * np.clip(1.0 - qa * qa, 0, 1) ** 0.6)
+        # an arm has the bed it is given, not whatever hollow it was cut into (a jetty's piles reach that bed);
+        # where it runs into the lake proper, the lake's own bed (keep what is deeper) takes over
+        arm_bed = (qa < 1.0) * smoothstep(0.9, 1.0, q)
+        q = np.minimum(q, qa)
+        self.lake_q = q
         shore_target = C.LAKE_LEVEL + 0.4 + (q - 1.0) * 14.0
         w_shore = (1.0 - smoothstep(1.0, 1.55, q)) * (q >= 1.0)
-        h = np.where(q < 1.0, np.minimum(h, bottom), lerp(h, shore_target, w_shore))
+        h = np.where(q < 1.0, lerp(np.minimum(h, bottom), bottom, arm_bed), lerp(h, shore_target, w_shore))
 
         # ------------------------------------------------------------------ pads (first pass)
         log("  pads")
@@ -513,17 +524,31 @@ class Terrain:
             heights[key] = ph
             if spec.get("land_mask", True):
                 w = w * smoothstep(0.0, 25.0, d_in)
+            # a pad's apron does not fill an arm of the lake (the pad proper is never in one)
+            w = np.where(inner > 0, w, w * smoothstep(0.98, 1.08, self.inlet_q)).astype(np.float32)
+            if key == "harbor":
+                # ... nor does the quay's: the quay wall drops straight into the dredged basin (its apron put a
+                # 3 m shelf in front of the wall, where the moored boats sat in the ground); beyond the ends of
+                # the wall the pad slopes into the sea as before
+                hx, hy, hhx, hhy = C.HARBOR_RECT
+                beyond = np.maximum(np.maximum((hx - hhx) - X, X - (hx + hhx)), 0.0)
+                w = (w * (1.0 - (Y < hy - hhy) * (1.0 - smoothstep(0.0, 15.0, beyond)))).astype(np.float32)
             h = lerp(h, ph, w).astype(np.float32)
             self.pad_masks[key] = (w, inner)
         self.pad_heights = heights
         log("    " + ", ".join(f"{k}={v:.1f}" for k, v in heights.items()))
+
+        # ------------------------------------------------------------------ jetty landings on the lake's arms
+        # (before the paths: a path down to a landing ends at this height)
+        h = self.pin_landings(h)
 
         # ------------------------------------------------------------------ harbor basin & breakwater
         x0, x1, y0, y1 = C.HARBOR_BASIN
         ex = np.maximum(np.maximum(x0 - X, X - x1), 0.0)
         ey = np.maximum(np.maximum(y0 - Y, Y - y1), 0.0)
         wb = 1.0 - smoothstep(0.0, 40.0, np.hypot(ex, ey))
-        h = np.where(wb > 0, lerp(h, np.minimum(h, -12.0), wb), h)
+        # flat: the natural floor falls to -35 m within 50 m of the quay; the basin is dredged (or filled) level
+        h = np.where(wb > 0, lerp(h, C.HARBOR_DEPTH, wb), h)
 
         # ------------------------------------------------------------------ rivers (water level from this ground)
         self.river_profiles(h, log)
@@ -639,6 +664,8 @@ class Terrain:
                 # never reshape the carriageway of a road that is already there (a branch's wide shoulder
                 # used to drag the main road's bed towards its own profile for tens of metres)
                 w = w * (1.0 - road_lock[sel])
+                # ... nor fill an arm of the lake round the end of a path that runs down to its jetty
+                w = w * smoothstep(0.98, 1.08, self.inlet_q[sel])
                 h[sel] = lerp(h[sel], ph, w)
             core = 1.0 - smoothstep(hw - 0.5, hw + 1.5, dist)
             core = np.where(np.isfinite(core), core, 0.0)
@@ -693,6 +720,7 @@ class Terrain:
             w, inner = self.pad_masks[key]
             h = lerp(h, heights[key], pad_core(w, 2.0, 1.0)).astype(np.float32)
         h = np.where(dl < 15, 4.0, h).astype(np.float32)
+        h = self.pin_landings(h)          # (again: the blur rounds them off by a few centimetres)
 
         # ------------------------------------------------------------------ rivers (cut last: crisp beds)
         h = self.carve_rivers(h, log)
@@ -933,8 +961,11 @@ class Terrain:
             hw = p["width"] / 2.0
             line = [tuple(q[:2]) for q in p["samples"][::2]] + [tuple(p["samples"][-1][:2])]
             ext = p.get("extend") or {}
-            # the last stretch to a door (config.PATH_EXTENSIONS) is painted like the path itself
-            line = [tuple(q) for q in ext.get("start", [])] + line + [tuple(q) for q in ext.get("end", [])]
+            # the last stretch to a door (config.PATH_EXTENSIONS) is painted like the path itself, on the curve
+            # the road's ribbon takes into it (layout.ribbon_line)
+            if ext.get("start") or ext.get("end"):
+                from . import strips
+                line = strips.round_joints(*strips.extended_line(line, ext), strips.ROAD_JOINT_RADIUS)
             dist, _ = polyline_distance(X, Y, line, hw + 4.0)
             dist = np.where(np.isfinite(dist), dist, 1e9)
             edge_noise = n2 * 0.7
@@ -1070,13 +1101,29 @@ class Terrain:
         mask = W.save_maps(h, self.water, self.sp, C.OUT_TEXTURES)
         rivers = self.river_records()
         jsonio.write_json(os.path.join(C.OUT_DATA, "water.json"),
-                          W.water_json(mask, [(r["id"], r["name"], r["points"][::2]) for r in rivers]),
+                          W.water_json(mask, [(r["id"], r["name"], r["points"][::2]) for r in rivers],
+                                       [(a["id"], a["name"], [(x, y, C.LAKE_LEVEL, hw) for (x, y), hw
+                                                              in zip(a["pts"], a["half"])])
+                                        for a in C.lake_inlets()]),
                           separators=(",", ":"))
         jsonio.write_json(os.path.join(C.CACHE_DIR, "terrain_info.json"),
                           dict(info=self.info, paths=self.paths, rivers=rivers, bridges=self.bridges))
         write_cache_stamp()
         log(f"  saved heightmap, splats, colour map, water maps, caches ({len(rivers)} rivers, "
             f"{len(self.bridges)} bridges)")
+
+    def pin_landings(self, h):
+        """The ground where a path meets a jetty's landing (config.LAKE_INLETS "landing") lies just under the
+        landing's deck - by the 6 cm a road's ribbon lies over the ground (layout.Layout.RIBBON_LIFT) - so the
+        paving ends level with the deck and the grass stays under the planks; level over a terrain mesh cell
+        round the joint (3 m), and never in the water."""
+        X, Y = self.X, self.Y
+        for rec in C.lake_inlets():
+            if rec["landing"]:
+                (jx, jy), jz = rec["landing"]
+                wl = (1.0 - smoothstep(3.2, 7.5, np.hypot(X - jx, Y - jy))) * smoothstep(0.98, 1.08, self.inlet_q)
+                h = lerp(h, jz - 0.06, wl).astype(np.float32)
+        return h
 
     def river_records(self):
         """Rivers as the later stages need them: samples every 2 m from where the water leaves the lake /

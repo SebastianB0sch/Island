@@ -93,8 +93,8 @@ python Tools/puzzles/validate.py           # 145 checks, 0 failures
 python Tools/opponents/import_canon_decks.py --check  # 32/32 runtime decks, 37/37 constructed
 python Tools/effects/audit.py              # PASS; 362 scripted + 345 vanilla, 493 pending
 python Tools/portrait_check.py --strict    # every named speaker/opponent has a bust and all declared expressions
-python -m unittest Tools.tests.test_water_pipeline Tools.tests.test_water_engine   # waves, rivers, road grades, materials
-.venv/bin/python Tools/alignment_check.py  # roads, bridges, footings, props, doors against the drawn terrain: 0 failures
+python -m unittest Tools.tests.test_water_pipeline Tools.tests.test_water_engine Tools.tests.test_waterside   # waves, rivers, lake arms, road grades, materials
+.venv/bin/python Tools/alignment_check.py  # roads, bridges, footings, props, doors, boats against the drawn terrain: 0 failures
 ```
 
 Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, dedicated 3D meshes for the named contacts who still use a generic student look, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
@@ -108,7 +108,7 @@ Still open before calling the port complete: the 493 pending card effects, exact
 | **Slifer Red Dorm** | The humble two-storey cliff-top shack with the outdoor walkway, curry-scented dining hall and the best sunset view. |
 | **Ra Yellow Dorm** | Tidy yellow dormitory with its famous cafeteria and sea-side balconies. |
 | **Obelisk Blue Dorm** | Palatial white-and-blue mansion with portico, cupola, fountain and formal gardens. |
-| **Obelisk Blue Girls' Dorm** | Elegant lakeside mansion with turrets, gazebo and a jetty with rowing boats. |
+| **Obelisk Blue Girls' Dorm** | Elegant lakeside mansion with turrets, gazebo and a garden walk down to a jetty with rowing boats, on an arm of the lake. |
 | **Academy Lake & Volcano Falls** | Lily pads, reeds, a waterfall plunging off the volcano's flank. |
 | **Duel Academy Volcano** | Smoking, glowing crater with a lava lake, fumaroles and a viewpoint (that's still active!). |
 | **Abandoned Dorm** | The decaying old Special Dorm deep in the forest — boarded windows, broken gate, an explorable creepy hall. |

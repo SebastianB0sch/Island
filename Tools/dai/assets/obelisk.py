@@ -31,7 +31,7 @@ TAU = math.pi * 2.0
 # degrees) for JETTY_LENGTH metres; the ramp climbs from the deck (z=-2.4) back towards +Y
 # up to JETTY_LAND_Z over 6 m and ends in a 3 m landing.  Stone sides reach down to -6, so
 # whatever the bank height is, the causeway reads as a little stone pier.
-JETTY_OFFSET = (10.0, -100.0)
+JETTY_OFFSET = (0.0, -100.0)       # on the axis of the garden walk; the lake's arm (config.LAKE_INLETS) reaches it
 JETTY_YAW = 0.0
 JETTY_LAND_Z = -1.2
 JETTY_LENGTH = 25.0

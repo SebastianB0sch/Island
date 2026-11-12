@@ -486,7 +486,7 @@ class Layout:
         "to_obelisk": "Obelisk Blue Dorm", "to_girls": "Girls' Dorm & Lake", "lake_walk": "Volcano Falls",
         "to_abandoned": "Abandoned Dorm  (Off Limits!)", "to_gym": "Duel Gym & Beach", "to_springs": "Hot Springs",
         "volcano_trail": "Volcano Crater", "forest_trail": "Forest Trail / Lake", "breakwater": "Lighthouse",
-        "to_heliport": "Heliport", "to_cliffs": "Sunset Point",
+        "to_heliport": "Heliport", "to_cliffs": "Sunset Point", "girls_jetty": "Girls' Dorm Jetty",
     }
 
     def in_any_pad(self, x, y, margin=0.0):
@@ -589,13 +589,18 @@ class Layout:
         pts = [(float(t[0]), float(t[1])) for t in p["samples"]]
         ext0 = 0.0
         given = p.get("extend") or {}
-        # the last stretch to a door (config.PATH_EXTENSIONS): the ribbon simply runs on
-        if given.get("start"):
-            lead = [tuple(q) for q in given["start"]] + [pts[0]]
-            ext0 = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(lead, lead[1:]))
-            pts = strips.resample(lead, 2.0)[:-1] + pts
-        if given.get("end"):
-            pts = pts + strips.resample([pts[-1]] + [tuple(q) for q in given["end"]], 2.0)[1:]
+        # the last stretch to a door (config.PATH_EXTENSIONS): the ribbon simply runs on, and turns into it on a
+        # curve where the two meet at an angle (the same curve the splat paints its bed on: terrain.py splat)
+        if given.get("start") or given.get("end"):
+            own = list(pts)
+            pts, joints = strips.extended_line(own, given, step=2.0)
+            pts = strips.round_joints(pts, joints, strips.ROAD_JOINT_RADIUS)
+            # arc 0 stays at the path's first sample: measured at the first of its samples the curve left alone
+            own_arc = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(np.asarray(own), axis=0).T))])
+            new_arc = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(np.asarray(pts), axis=0).T))])
+            where = {q: i for i, q in enumerate(own)}
+            k = next(i for i, q in enumerate(pts) if q in where)
+            ext0 = float(new_arc[k] - own_arc[where[pts[k]]])
         for q in self.earlier_roads(p):
             reach = self.road_reach(q)
             for at_start in (True, False):
@@ -1426,11 +1431,7 @@ class Layout:
         level = waterways.water_level(x, y)          # rivers and ponds count: nobody is posted in a stream
         if level is not None and level > 0.05:
             return level
-        a = math.radians(C.LAKE_ROT)
-        dx, dy = x - C.LAKE_CENTER[0], y - C.LAKE_CENTER[1]
-        q = math.hypot((dx * math.cos(a) + dy * math.sin(a)) / C.LAKE_RADII[0],
-                       (-dx * math.sin(a) + dy * math.cos(a)) / C.LAKE_RADII[1])
-        return C.LAKE_LEVEL if q < 1.15 else 0.0
+        return C.LAKE_LEVEL if float(terrain.lake_q(x, y)) < 1.15 else 0.0
 
     def slope_at(self, x, y, d=1.0):
         gx = (self.ground(x + d, y) - self.ground(x - d, y)) / (2 * d)
@@ -1513,11 +1514,7 @@ class Layout:
         sea_col = np.stack([0.35 - 0.3 * depth, 0.72 - 0.47 * depth, 0.85 - 0.35 * depth], -1)
         img = np.where(sea[..., None], sea_col, img)
         X, Y = np.meshgrid(-C.HALF + np.arange(size) * sp, C.HALF - np.arange(size) * sp)
-        a = math.radians(C.LAKE_ROT)
-        dx, dy = X - C.LAKE_CENTER[0], Y - C.LAKE_CENTER[1]
-        q = np.sqrt(((dx * math.cos(a) + dy * math.sin(a)) / C.LAKE_RADII[0]) ** 2 +
-                    ((-dx * math.sin(a) + dy * math.cos(a)) / C.LAKE_RADII[1]) ** 2)
-        lake = (hz < C.LAKE_LEVEL) & (q < 1.1)
+        lake = (hz < C.LAKE_LEVEL) & (terrain.lake_q(X, Y) < 1.1)
         img = np.where(lake[..., None], np.array([0.25, 0.6, 0.72]), img)
         level = terrain.load_water()
         fresh = ndimage.zoom((np.isfinite(level) & (level > 0.05)).astype(np.float32), size / level.shape[0],

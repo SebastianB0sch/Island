@@ -215,8 +215,10 @@ def sample_mask(mask_u8, x, y):
             + a[r1, c0] * (1 - fu) * fv + a[r1, c1] * fu * fv)
 
 
-def water_json(mask_u8, rivers):
-    """Data/water.json. rivers: [(id, name, [(x, y, z, half_width)] in metres, Blender axes)]."""
+def water_json(mask_u8, rivers, inlets=()):
+    """Data/water.json. rivers: [(id, name, [(x, y, z, half_width)] in metres, Blender axes)]. inlets: the lake's
+    arms in the same form (level = the lake's): still water outside the lake's ellipse, which the engine's
+    lake test does not cover, so it finds them like the rivers (flat sheets at the lake's level)."""
     hx = C.HALF * 100.0
     return dict(
         version=1, sea_level=C.SEA_LEVEL * 100.0,
@@ -226,7 +228,10 @@ def water_json(mask_u8, rivers):
                        data=base64.b64encode(np.ascontiguousarray(mask_u8).tobytes()).decode("ascii")),
         rivers=[dict(id=rid, name=name,
                      points=[[round(x * 100.0, 1), round(-y * 100.0, 1), round(z * 100.0, 1), round(hw * 100.0, 1)]
-                             for (x, y, z, hw, *_rest) in pts]) for rid, name, pts in rivers])
+                             for (x, y, z, hw, *_rest) in pts]) for rid, name, pts in rivers],
+        inlets=[dict(id=rid, name=name,
+                     points=[[round(x * 100.0, 1), round(-y * 100.0, 1), round(z * 100.0, 1), round(hw * 100.0, 1)]
+                             for (x, y, z, hw, *_rest) in pts]) for rid, name, pts in inlets])
 
 
 # --------------------------------------------------------------------------- tileable textures

@@ -10,6 +10,7 @@ the exported mesh, terrain.MeshField - not the finer heightfield behind it):
     are built onto the terrain (villages, landmarks) - no gap under any footing;
   * every prop / vegetation instance outside buildings against the terrain,
   * every automatic-door threshold against the world floor,
+  * every boat: at the water's surface, with water under its whole hull,
   * vegetation that lands inside a building volume or within 1.6 m of a door.
 
 Run with Blender (the layout stage needs bpy / scipy):
@@ -471,6 +472,46 @@ def check_footings(lay):
     return failures
 
 
+BOAT_KEEL = 0.3          # m of water a boat keeps under its keel (rowing boats: their whole hull is drawn above z)
+
+
+def check_boats(lay):
+    """Every boat (the floating actors - they bob in the engine, so no other check looks at them) floats at
+    the water's surface over water deep enough for its hull: the ground under its whole footprint lies at
+    least BOAT_KEEL under the bottom of the hull, and the surface it sits at is the water's there."""
+    failures = 0
+    print("\n=== BOATS AFLOAT")
+    boats = [f for f in lay.floating if f["mesh"] in ("SM_Rowboat", "SM_FishingBoat")]
+    bounds = placement.prop_bounds({f["mesh"] for f in boats}, log=lambda m: None)
+    for f in boats:
+        x, y, z = f["loc"][0] / 100.0, f["loc"][1] / 100.0 * layout.Y_SIGN, f["loc"][2] / 100.0
+        yaw = math.radians(layout.ue_yaw(f["yaw"]))           # ue_yaw is its own inverse
+        (x0, y0, z0), (x1, y1, _z1) = bounds[f["mesh"]]
+        s = f.get("scale", 1.0)
+        keel = z + z0 * s
+        water = lay.water_at(x, y)
+        issues = []
+        if abs(z - water) > 0.15:
+            issues.append(f"sits at {z:.2f} on water at {water:.2f}")
+        worst = None
+        for u in np.linspace(x0 * 0.9, x1 * 0.9, 5):
+            for v in np.linspace(y0 * 0.9, y1 * 0.9, 3):
+                px = x + (u * math.cos(yaw) - v * math.sin(yaw)) * s
+                py = y + (u * math.sin(yaw) + v * math.cos(yaw)) * s
+                room = min(keel, lay.water_at(px, py)) - lay.ground(px, py)
+                if worst is None or room < worst[0]:
+                    worst = (room, px, py)
+        if worst[0] < BOAT_KEEL:
+            issues.append(f"ground {-worst[0]:+.2f} m against the keel at ({worst[1]:.1f}, {worst[2]:.1f})")
+        tag = "CHECK" if issues else "OK"
+        print(f"  {f['mesh']:15s} ({x:8.1f}, {y:8.1f}) keel {keel:6.2f}  {worst[0]:5.1f} m under it  {tag}")
+        for line in issues:
+            print(f"       - {line}")
+        failures += bool(issues)
+    print(f"  checked {len(boats)} boats")
+    return failures
+
+
 def check_world_points(lay):
     """Story anchors on open ground (Content/Data/World/anchors.json, kind "player" outside every pad): a
     player anchor is authored on or up to ~1.2 m above the surface it stands on. Regrading the ground under
@@ -546,8 +587,9 @@ def main():
     placement.SOFT = tuple(placement.SOFT) + ("Blocker",)
 
     failures = 0
-    if os.environ.get("DAI_AUDIT_ONLY") == "entrances":
-        failures = check_entrances(lay, ck)
+    only = os.environ.get("DAI_AUDIT_ONLY")
+    if only in ("entrances", "boats"):
+        failures = check_entrances(lay, ck) if only == "entrances" else check_boats(lay)
         print(f"\nALIGNMENT FAILURES: {failures}")
         return 1 if failures else 0
     failures += check_roads(lay)
@@ -555,6 +597,7 @@ def main():
     failures += check_footings(lay)
     failures += check_world_points(lay)
     failures += check_entrances(lay, ck)
+    failures += check_boats(lay)
     print()
 
     print("=== LOCATION BASE vs TERRAIN / PAD")

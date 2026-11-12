@@ -47,6 +47,7 @@ terrain mesh as it is drawn**, and everything that lies on it is checked against
 | door thresholds | 21 cm | 587 doors, only the 5 accepted exceptions |
 | vegetation inside buildings / at doors | 0 | 0 |
 | story anchors on open ground | not buried, no air under them | 10 checked, pass |
+| every boat at the water's surface, with water under its whole hull | 30 cm under the keel | 18 boats, pass |
 
 | | |
 |---|---|
@@ -91,6 +92,46 @@ Three story anchors moved with the ground: the Ra and Obelisk front gates (their
 
 Known and left as is: the volcano trail's hairpins are tighter than the 3 m mesh can hold, so the ground there
 deviates from the solved profile by up to half a metre over a few metres (a dirt trail: nothing is laid on it).
+
+Where a road meets the stretch it is carried on by at an angle (the Obelisk road turning onto the Academy
+lawn, 51 degrees), it now turns on a curve instead of a kink: `strips.round_joints` replaces the 12 m before and
+after the corner by a curve tangent to both legs, for the ribbon (`Layout.ribbon_line`) and the bed the splat
+paints under it alike. The last legs onto a slab stay straight and square to it.
+
+## The water's edge
+
+Two findings of the November audit below were still open: boats moored on dry land.
+
+| | |
+|---|---|
+| ![Girls' dorm jetty](../renders/girls_jetty.jpg) | ![Harbour quay](../renders/harbor_quay.jpg) |
+| The lake's new arm reaches the girls' dorm jetty; the garden walk runs on to its landing | The harbour basin is dredged flat up to the quay wall; the boats float |
+
+* **The girls' dorm jetty** stood in a dry hollow 70 m from the lake, 2.5-3.5 m over the grass, with three
+  rowing boats on the lawn beside it. The lake now has an arm (`config.LAKE_INLETS`): a polyline with a water
+  width at each point, from the head of the arm out into the open lake. `shoreline.inlet_q` turns it into the
+  lake's own normalised radius - 0 on the middle line, 1 at the water's edge, then 1 + metres / bank width -
+  and the terrain stage takes the minimum of that and the ellipse as the lake's `q`, so the arm has the
+  lake's shoreline, sand and bank shaping and lies in the same water raster. Its bed is the one it is given
+  (27.2 m in the middle, 2.8 m of water; the jetty's piles reach it), not the hollow it was cut into. The
+  lake mesh is sized to take it in; `water.json` lists it under `inlets`, and `level.py` adds it to the
+  island manager like a river (a still sheet at the lake's level), because the manager's lake test is the
+  ellipse. Pads' aprons and road beds no longer fill an arm.
+  The jetty moved 10 m onto the axis of the garden walk, which now runs on to its landing (path
+  `girls_jetty`, paved, square to the walk and to the landing). The ground where the paving meets the
+  landing is levelled 6 cm under the deck, so the paving ends flush with the planks.
+* **The harbour**: the quay's pad apron put a shelf at +3 m in front of the quay wall, 6 m deep, and the
+  dredged basin began 10 m out - the rowing boats and a trawler moored along the quay sat in the ground.
+  The basin (`config.HARBOR_BASIN`) now reaches the quay face and is dredged flat to `HARBOR_DEPTH` (-12 m;
+  the quay wall stands 1 m into that bed, the pier's piles on it - the natural floor fell to -35 m within
+  50 m of the quay, under piles that stopped at -12). The pad's apron stops at the quay face and comes back
+  over 15 m beyond the ends of the wall. The east trawler moved 32 m west, off the breakwater's embankment.
+* **Fisher's Cove**: the rowing boat lay 6 m back from the pier head on the railed side, on the sand under
+  10 cm of water; it now lies alongside the head on its open side.
+* **The check** (`alignment_check.py`, BOATS; `DAI_AUDIT_ONLY=boats`): every boat - they are floating
+  actors, so no other check looked at them - sits at the water's surface, and the ground under its whole
+  footprint (5 x 3 points of its rotated bounds) is at least 30 cm under the keel.
+* The story anchor `obelisk_girls_gate` stood in the old hollow; it follows the new bank (+2.95 m).
 
 ---
 
@@ -196,26 +237,13 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
 
 ## Confirmed, not yet fixed (require terrain rebuild or design decision)
 
-### Harbor quay / basin
-- Harbor rowboats and fishing boats at y≈-1129 sit at z=0 over terrain h≈3.0 m; the ferry
-  origin is at h=1.33 m. They are buried, not floating.
-- `HARBOR_BASIN` ends at y=-1136, leaving a 10 m shelf south of the quay face (y=-1126).
-- Both pad re-flatten passes raise the dredged basin near the pad; the final core only reaches
-  zero ~22 m past the pad edge.
-- The basin is 92.9 % deeper than -12 m (mean -35.6 m); pier piles stop at -12 m, leaving a
-  ~23.8 m gap below the T-head piles.
-- Recommended minimal fix: set basin y1=-1126; restrict both harbor pad re-flatten passes to
-  y >= -1126; flatten the basin to -12 m (or extend the pier piles); no asset move needed.
+### Harbor quay / basin - fixed 2026-11-12
+Boats buried in a shelf in front of the quay, the basin stopping short of it, the pad re-flatten passes
+raising it, piles over a -35 m floor: see [The water's edge](#the-waters-edge) above.
 
-### Girls' dorm jetty / lake
-- The jetty landing is at world 31.8 m; terrain under it is 28.3-29.3 m, and the lake surface
-  (z=30.0) does not reach it. The jetty root is q≈1.57, outside the lake mesh grid/cutoff.
-- The three rowboats at z=30.0 are 2.8-3.25 m above dry ground, 67-74 m from visible water.
-- A 1.5-1.8 m shore berm separates the lake from the jetty basin.
-- Recommended fixes: (a) carve a ~15-20 m channel from the lake to the jetty basin, extend the
-  lake mesh to `ext >= 1.6*max(rx,ry)` and `qq < 1.7`, and update `Layout.water_at`; or
-  (b) move the jetty + boats to the actual shore at q≈0.99; or (c) add a local pond plane as a
-  stopgap.
+### Girls' dorm jetty / lake - fixed 2026-11-12
+The jetty and its boats on dry ground 70 m from the lake: the lake now has an arm up to the jetty, see
+[The water's edge](#the-waters-edge) above.
 
 ### Ferry bob vs static actors
 - The ferry bobs ±0.15 m, but its 39 light sockets and 43 text sockets are static world actors;

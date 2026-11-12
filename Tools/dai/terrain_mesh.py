@@ -261,6 +261,9 @@ def lake_surface(level):
     lake = ndimage.binary_dilation(lake, iterations=2).astype(np.float32)
     lcx, lcy = C.LAKE_CENTER
     ext = max(C.LAKE_RADII) * 1.2
+    for rec in C.lake_inlets():                     # the lake's arms reach beyond the ellipse
+        for (x, y), hw in zip(rec["pts"], rec["half"]):
+            ext = max(ext, abs(x - lcx) + hw + 6.0, abs(y - lcy) + hw + 6.0)
     cell = W.LAKE_CELL
     n = int(2 * ext / cell)
     xs = lcx - ext + np.arange(n + 1) * cell

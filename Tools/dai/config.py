@@ -166,9 +166,34 @@ VOLCANO_VIEW = (850.0, 690.0)  # viewpoint at the end of the volcano trail (foot
 VOLCANO_VIEW_YAW = math.degrees(math.atan2(700.0 - 690.0, 720.0 - 850.0))   # facing the crater
 CRATER_DEPTH = 40.0           # floor is this far below the rim (rim is measured)
 HARBOR_RECT = (60.0, -1066.0, 235.0, 60.0)   # cx, cy, half-x, half-y of the flat quay
-HARBOR_BASIN = (-250.0, 420.0, -1420.0, -1136.0)  # x0, x1, y0, y1 dredged to -12 m
+# x0, x1, y0, y1 dredged flat to HARBOR_DEPTH: right up to the quay face (the south edge of HARBOR_RECT), whose
+# wall reaches 1 m below that bed; the pier's piles stand on it
+HARBOR_BASIN = (-250.0, 420.0, -1420.0, -1126.0)
+HARBOR_DEPTH = -12.0
 SEA_STACKS = [(-1300.0, 60.0, 22.0, 34.0), (-1265.0, -95.0, 16.0, 26.0), (-1350.0, 210.0, 26.0, 42.0),
               (-1215.0, -455.0, 14.0, 22.0), (-990.0, 1010.0, 20.0, 30.0), (420.0, 1390.0, 18.0, 28.0)]
+
+# Arms of the lake. pts: (x, y, half width of the water) in world metres, or (location key, local x, local y,
+# half width) in that location's frame, from the head of the arm out into the open lake. The terrain stage
+# cuts each like the lake itself - `depth` m deep along the middle, banks rising `bank` m per unit of the
+# lake's normalised radius (terrain.inlet_q) - and the water raster, the lake mesh, the minimap and the
+# engine's water query (water.json "inlets") all see it. landing: (point, z) where a path meets a jetty's
+# landing and the height of the landing's deck there (the ground is levelled just under it).
+LAKE_INLETS = [
+    # The girls' dorm jetty stood on dry ground in a hollow 70 m from the water; the lake now reaches up to it
+    # along the axis of the garden walk (jetty root at local (0, -100), deck towards -Y, piles down to 27.0).
+    dict(id="girls_jetty", name="Jetty Inlet", depth=2.2, bank=40.0,
+         landing=(("obelisk_girls", 0.0, -91.0), 31.8),
+         pts=[("obelisk_girls", 0.0, -104.0, 8.0), ("obelisk_girls", 0.0, -126.0, 12.0),
+              ("obelisk_girls", -3.0, -152.0, 14.0), ("obelisk_girls", 2.0, -180.0, 18.0),
+              ("obelisk_girls", 0.0, -208.0, 26.0), ("obelisk_girls", 0.0, -232.0, 32.0)]),
+]
+
+
+def _local(key, lx, ly):
+    """World (x, y) of a point given in a location's own frame (for the tables below)."""
+    (ox, oy), a = LOCATIONS[key]["pos"], math.radians(LOCATIONS[key].get("yaw", 0.0))
+    return ox + lx * math.cos(a) - ly * math.sin(a), oy + lx * math.sin(a) + ly * math.cos(a)
 
 # --------------------------------------------------------------------------- paths
 # Each path: list of XY waypoints, width (m), surface ('paved' | 'dirt' | 'boardwalk'), lamps?
@@ -191,6 +216,9 @@ PATHS = [
     dict(id="to_girls", width=7.0, surface="paved", lamps=True, pts=[
         (-60.0, 290.0), (-90.0, 420.0), (-120.0, 560.0), (-150.0, 700.0), (-170.0, 820.0),
         (-190.0, 860.0)]),
+    # Girls' dorm garden walk (it ends between two lantern pillars at the edge of the pad) -> the jetty landing
+    dict(id="girls_jetty", width=4.0, surface="paved", lamps=False, pts=[
+        _local("obelisk_girls", 0.0, -62.5), _local("obelisk_girls", 0.0, -91.0)]),
     # Lake shore walk to waterfall viewpoint
     dict(id="lake_walk", width=4.0, surface="dirt", lamps=False, pts=[
         (-150.0, 700.0), (-30.0, 640.0), (110.0, 600.0), (230.0, 640.0), (285.0, 715.0),
@@ -273,6 +301,9 @@ PATH_EXTENSIONS = {
     "to_cliffs": dict(start=[("obelisk_boys", -44.0, -10.0)]),
     # the hot springs: up to the gate and its stepping stones
     "to_springs": dict(end=[("hotsprings", 0.0, -28.6)]),
+    # the girls' dorm: from the garden walk (5.2 m) onto the jetty's stone landing (4 m)
+    "girls_jetty": dict(start_edge=(("obelisk_girls", -2.6, -62.5), ("obelisk_girls", 2.6, -62.5)),
+                        end_edge=(("obelisk_girls", -2.0, -91.0), ("obelisk_girls", 2.0, -91.0))),
 }
 
 # --------------------------------------------------------------------------- waterways
@@ -312,9 +343,19 @@ def world_point(pt):
     """World (x, y) of a waypoint: (x, y) as it is, or (location key, local x, local y)."""
     if len(pt) == 2:
         return float(pt[0]), float(pt[1])
-    key, lx, ly = pt
-    (ox, oy), a = LOCATIONS[key]["pos"], math.radians(LOCATIONS[key].get("yaw", 0.0))
-    return ox + lx * math.cos(a) - ly * math.sin(a), oy + lx * math.sin(a) + ly * math.cos(a)
+    return _local(*pt)
+
+
+def lake_inlets():
+    """LAKE_INLETS in world metres: [dict(id, name, depth, bank, pts [(x, y)], half [m], landing ((x, y), z))]."""
+    out = []
+    for rec in LAKE_INLETS:
+        pts = [world_point(p[:-1]) for p in rec["pts"]]
+        land = rec.get("landing")
+        out.append(dict(id=rec["id"], name=rec["name"], depth=float(rec["depth"]), bank=float(rec["bank"]),
+                        pts=pts, half=[float(p[-1]) for p in rec["pts"]],
+                        landing=(world_point(land[0]), float(land[1])) if land else None))
+    return out
 
 
 def path_extension(path_id):

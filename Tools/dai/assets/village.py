@@ -1422,7 +1422,9 @@ def build_fishers_cove():
             end = pier(v, pr, v.nc, (start[0] - dx * 1.0, start[1] - dy * 1.0), yaw_p, ln, 1.35, width=2.6, tee=6.0, rail="right")
             ex_, ey_ = end[0], end[1]
             a.prop("SM_FishingBoat", (ex_ + dx * 9.0 - dy * 6.0, ey_ + dy * 9.0 + dx * 6.0, 0.0), yaw_p + 100.0)
-            a.prop("SM_Rowboat", (ex_ - dx * 6.0 + dy * 3.4, ey_ - dy * 6.0 - dx * 3.4, 0.0), yaw_p + 5.0)
+            # the rowing boat lies alongside the tee on its open (left) side, in the pier head's deep water - 6 m
+            # back on the railed side it sat on the sand under 10 cm of water
+            a.prop("SM_Rowboat", (ex_ - dx * 1.5 - dy * 5.3, ey_ - dy * 1.5 + dx * 5.3, 0.0), yaw_p + 5.0)
             a.prop("SM_Buoy", (ex_ + dx * 22.0, ey_ + dy * 22.0, 0.0), 0.0)
             a.npc((end[0] - dx * 1.0, end[1] - dy * 1.0, 1.35), yaw_p, "slifer", 1.5)
             a.special("clearing", (start[0], start[1], 1.0), radius=4.0)

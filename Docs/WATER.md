@@ -81,7 +81,7 @@ Palette keys are documented at the top of `Tools/dai/palette.py`.
 
 * `SM_Ocean` - a 5 m grid over the whole terrain domain wherever there is sea, then rings of doubling cell
   size out to 20 km, stitched 2:1 so the displaced part has no T-junctions.
-* `SM_LakeSurface` - a 1.5 m grid over the lake.
+* `SM_LakeSurface` - a 1.5 m grid over the lake and its arms.
 * `SM_River_<Name>` - a 1.5 m grid over each river (a grid cannot fold over itself in a tight bend or a round
   pond the way a ribbon does). UV0 = (metres from the left bank, metres downstream), UV1 = (foam, bank).
 
@@ -101,6 +101,16 @@ Palette keys are documented at the top of `Tools/dai/palette.py`.
 Today: the **Academy River** (lake -> past the academy and Millbrook -> Willow Pond -> the sea below the gym,
 1.9 km) and the **Forest Creek** (a spring in the forest -> the east coast, 0.7 km), with six bridges.
 
+## The lake's arms
+
+`config.LAKE_INLETS`: an arm of the lake is a polyline with the water's half width at each point, from its
+head out into the open lake (today one: the inlet that reaches the girls' dorm jetty). `shoreline.inlet_q`
+gives it as the lake's own normalised radius, which the terrain stage merges with the ellipse's - one
+shoreline, one water raster, the same sand and bank shaping - while the arm keeps a bed of its own (`depth`
+along the middle) and banks `bank` metres wide per unit of q. `water.json` lists the arms under `inlets`;
+the engine's lake test is the ellipse, so `level.py` adds them to the island manager like the rivers: still
+water at the lake's level, without the lake's wavelets.
+
 ## Gameplay
 
 * `ADAIslandManager::QueryWater` / `GetWaterSurfaceZ` answer for any location: river, lake or sea, waves
@@ -115,11 +125,16 @@ Today: the **Academy River** (lake -> past the academy and Millbrook -> Willow P
 * Wave sets: `OCEAN_WAVES` / `LAKE_WAVES` in `Tools/dai/water.py`, then `python Tools/build_island.py terrain`
   (rewrites `water.json`) and rebuild the materials and the level in the editor.
 * Calmer or rougher coast: `wave_mask` in the same file.
-* A new river: add it to `config.RIVERS`, run `terrain meshes layout`.
+* A new river: add it to `config.RIVERS`, run `terrain meshes layout`. A new arm of the lake: add it to
+  `config.LAKE_INLETS`, the same stages.
 
 ## Not yet verified in the engine
 
 Written carefully, but unseen in Unreal - check these first if something looks wrong:
+
+* **The lake's arms in the water query.** `level.py` adds `water.json` "inlets" with `add_river`; standing
+  in the girls' dorm inlet should report water at 30 m (a river body). If the player walks on the bed
+  there, the arms did not reach the manager.
 
 * **Foam on single layer water.** Foam is fed to base colour with *opacity as its coverage*. If the engine
   ignores opacity on this shading model, the foam simply does not show.
