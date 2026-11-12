@@ -442,11 +442,13 @@ def _box(name, centre, size, rot_z=0.0):
 # --------------------------------------------------------------------------- garments
 def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, v=0.0, flare=0.0, waist=0.0,
         slot="cloth", cuff=0.0, puff=0.0, bell=0.0, sleeve_to=None, sleeve_color=None, style=None,
-        sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2), detail=None, hem_front=None):
+        sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2), detail=None, hem_front=None,
+        sleeve_sides=("l", "r")):
     """Shirt / blouse / jacket / coat body with optional sleeves.
     open: front opening half angle in degrees (0 = closed); v: depth (m) of a V neckline below `neck`;
     tail: hem chains to hang the part below the hips from ("skirt" | "coattail"); hem_front: cut-away front
-    (the hem rises to this height at the front and falls to `hem` at the back);
+    (the hem rises to this height at the front and falls to `hem` at the back); sleeve_sides: ("l",) for a
+    one-sleeved coat (the other side is cut like a vest armhole);
     detail: painted tailoring on top of the automatic seams / fold hints / ambient shade (_top_tailoring):
     dict(placket=dict(w, buttons, color, button), zip=True, buttons=dict(n, z0, z1, x, color),
     pockets=("chest" | "chest_r" | "hip" | "flap" | "welt", ...), yoke=True, panels=True, back_seam=True,
@@ -475,7 +477,7 @@ def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, 
         if detail is not False:
             sleeve_style = _tailored(sleeve_style, _sleeve_tailoring(kit, 0.090, x1, ease * 0.72,
                                                                     rolled=sleeves in ("elbow", "short")))
-        for side in ("l", "r"):
+        for side in sleeve_sides:
             sl = M.solidify(_sleeve(kit, f"sleeve_{side}", side, 0.090, x1, ease * 0.72, cuff=cuff, puff=puff, bell=bell),
                             thick * 0.8)
             kit.add(sl, sleeve_color or color, slot, cells=(1, 2 if (cells[1] > 1 and x1 > 0.45) else 1),
@@ -824,5 +826,107 @@ def glasses(kit, color, head, round_=0.9, lens=None):
     kit.add(M.tube("bridge", None, br, 0.0010, n=5, outline=0.0).rigid("head"), color, "cloth")
 
 
+def _strap_part(name, P, N, width, thick):
+    """Flat strap along points P (K, 3) lying on a surface with outward normals N: a thin box section."""
+    tan = np.gradient(P, axis=0)
+    tan /= np.maximum(np.linalg.norm(tan, axis=1, keepdims=True), 1e-12)
+    side = np.cross(N, tan)
+    side /= np.maximum(np.linalg.norm(side, axis=1, keepdims=True), 1e-12)
+    h = width / 2
+    rings = np.stack([P + side * h + N * thick, P - side * h + N * thick, P - side * h, P + side * h], axis=1)
+    return M.loft(name, None, rings, closed=True, cap0=True, cap1=True, outline=0.7)
+
+
+def _buckle(kit, at, normal, color, strap_color, size=(0.030, 0.026), name="buckle"):
+    """Frame buckle lying on a strap: plate, window showing the strap, prong."""
+    n = np.asarray(normal, np.float64)
+    rot = math.atan2(-n[0], n[1])
+    w, h = size
+    for off, (sx, sy, sz), col in ((0.004, (w, 0.008, h), color), (0.0075, (w * 0.66, 0.005, h * 0.6), strap_color),
+                                   (0.0095, (w * 0.10, 0.004, h * 0.62), color)):
+        kit.add(_box(name, np.asarray(at) + n * off, (sx, sy, sz), rot_z=rot).weights(M.w_spine), col, "cloth")
+
+
+def strap(kit, color, path, width=0.024, ease=0.012, thick=0.0035, buckles=(), buckle=(0.80, 0.82, 0.86),
+          pouch=None, style=None, name="strap"):
+    """Strap lying on the torso along `path` [(z, azimuth deg)] (0 = front centre, + = the character's left;
+    straps over the shoulder use z up to 1.43); buckles: fractions along it; pouch: (fraction, colour) of a
+    small pouch hanging from it."""
+    b = kit.body
+    path = np.asarray(path, np.float64)
+    seg = np.linspace(0.0, 1.0, len(path))
+    t = np.linspace(0.0, 1.0, max(24, 12 * len(path)))
+    zs = np.interp(t, seg, path[:, 0])
+    th = np.radians(np.interp(t, seg, path[:, 1]))
+    Q = np.array([b.torso_ring(min(z, 1.405), ease, theta=[a])[0] for z, a in zip(zs, th)])
+    Q[:, 2] = zs
+    cy = np.array([b.centre_y(min(z, 1.405)) for z in zs])
+    N = np.stack([Q[:, 0], Q[:, 1] - cy, np.zeros(len(Q))], axis=1)
+    N[:, 2] = np.clip(zs - 1.36, 0.0, None) * 6.0              # over the shoulder the strap faces up
+    N /= np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-12)
+    st = dict(edge=[(0.10, P.shade(color, v=0.70))], stitch=[("u", 0.22, 0.0, 1.0), ("u", 0.78, 0.0, 1.0)])
+    st.update(style or {})
+    kit.add(_strap_part(name, Q, N, width, thick).weights(M.w_spine), color, "cloth", **st)
+    for f in buckles:
+        i = int(round(f * (len(Q) - 1)))
+        _buckle(kit, Q[i] + N[i] * thick, N[i], buckle, color)
+    if pouch is not None:
+        f, col = pouch
+        i = int(round(f * (len(Q) - 1)))
+        c = Q[i] + N[i] * (thick + 0.016) + np.array([0.0, 0.0, -0.035])
+        rot = math.atan2(-N[i][0], N[i][1])
+        kit.add(_box("deckbox", c, (0.058, 0.026, 0.072), rot_z=rot).weights(M.w_spine), col, "cloth",
+                top=[(0.30, P.shade(col, v=0.72))], hem=[(0.06, P.shade(col, v=0.8))])
+        _buckle(kit, c + N[i] * 0.013 + np.array([0.0, 0.0, 0.014]), N[i], buckle, col, size=(0.014, 0.016),
+                name="clasp")
+
+
+def legstrap(kit, color, side="r", z=0.72, width=0.026, ease=0.006, buckle=(0.80, 0.82, 0.86), pouch=None):
+    """Strap round the thigh with a buckle on the outer front; pouch: colour of a slim pouch on the outside."""
+    b = kit.body
+    s = 1.0 if side == "l" else -1.0
+    p = M.solidify(_leg_shell(kit, f"legstrap_{side}", side, z - width / 2, z + width / 2, ease), 0.003)
+    kit.add(p, color, "cloth", edge=[(0.12, P.shade(color, v=0.7))])
+    ring = b.leg_ring(z, ease + 0.003, n=24, side=s)
+    cx = float(ring[:, 0].mean())
+    cyy = float(ring[:, 1].mean())
+    for ang, what in ((0.62, "buckle"), (0.0, "pouch")):
+        q = ring[int(round(ang / (2 * math.pi) * 24)) % 24]
+        n = np.array([q[0] - cx, q[1] - cyy, 0.0])
+        n /= max(np.linalg.norm(n), 1e-9)
+        if what == "buckle":
+            _buckle(kit, q, n, buckle, color, size=(0.024, 0.022))
+        elif pouch is not None:
+            rot = math.atan2(-n[0], n[1])
+            box = _box("deckbox", q + n * 0.016 + np.array([0.0, 0.0, -0.030]), (0.024, 0.060, 0.080), rot_z=rot)
+            kit.add(box.weights(M.w_leg(side)), pouch, "cloth", top=[(0.28, P.shade(pouch, v=0.72))])
+    kit.cover_legs(z - width / 2, z + width / 2)
+
+
+def bracer(kit, color, side="r", x0=0.43, x1=0.57, trim=(0.90, 0.72, 0.30), disk=(0.20, 0.21, 0.26),
+           glow=(0.95, 0.55, 0.20)):
+    """Armoured forearm guard carrying a compact duel-disk plate: a hard shell with raised rims, segment
+    lines, and a round disk with a lit ring on the back of the forearm."""
+    sh = M.solidify(_sleeve(kit, f"band_bracer_{side}", side, x0, x1, 0.016), 0.005)
+    kit.add(sh, color, "cloth", hem=[(0.10, trim)], top=[(0.10, trim)],
+            seams=[("v", 0.38, None, None), ("v", 0.62, None, None)])
+    for x in (x0 + 0.006, x1 - 0.006):
+        rim = M.solidify(_sleeve(kit, f"band_rim_{side}", side, x - 0.006, x + 0.006, 0.022), 0.003)
+        kit.add(rim, trim, "cloth")
+    # the disk: a low cylinder on the back of the forearm (+z in the T-pose design space), a lit ring round it
+    b = kit.body
+    s = 1.0 if side == "l" else -1.0
+    xm = 0.5 * (x0 + x1)
+    top = b.arm_ring(xm, 0.022, n=24, side=s)
+    c = top[int(np.argmax(top[:, 2]))].copy()
+    for name, r, h0, h1, col in (("band_disk", 0.040, 0.000, 0.010, disk), ("band_diskring", 0.030, 0.010, 0.0125, glow),
+                                 ("band_diskhub", 0.016, 0.0125, 0.016, color)):
+        rings = [M.ring(c + (0, 0, h), (1, 0, 0), (0, 1, 0), r * k, r * k, 24) for h, k in ((h0, 1.0), (h1, 0.94))]
+        p = M.loft(f"{name}_{side}", None, np.array(rings), closed=True, cap0=True, cap1=True, outline=0.6)
+        kit.add(p.weights(M.w_arm(side)), col, "cloth")
+    kit.cover_arms(x0, x1)
+
+
 GARMENTS = dict(top=top, skirt=skirt, pants=pants, legwear=legwear, shoes=shoes, collar=collar, bow=bow, tie=tie,
-                belt=belt, band=band, gloves=gloves, cape=cape, scarf=scarf, emblem=emblem, buttons=buttons)
+                belt=belt, band=band, gloves=gloves, cape=cape, scarf=scarf, emblem=emblem, buttons=buttons,
+                strap=strap, legstrap=legstrap, bracer=bracer)
