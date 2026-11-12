@@ -6,10 +6,11 @@ hair, cloth and the painted eye / mouth parts:
 
   class   lit/shadow ramp                    shadow colour            extras
   -----   ---------------------------------  -----------------------  ------------------------------------
-  skin    hard step at half-Lambert 0.50     warm (reddened skin)     soft rim
+  skin    hard step at half-Lambert 0.50     warm (reddened skin)     soft rim, deeper core shadow, warm terminator
   face    step at 0.30, wider (soft) edge    warm                     faint rim; smoothed normals (shading.py)
-  hair    hard step at 0.48                  cool, deeper             rim + an "angel ring" highlight band
-  cloth   hard step at 0.50                  cool, slightly blue      rim
+  hair    hard step at 0.48                  cool, deeper             rim, core shadow (+ an "angel ring" band on
+                                                                      hair without a painted highlight)
+  cloth   hard step at 0.50                  cool, slightly blue      rim, core shadow
   flat    none (always fully lit)            -                        eyes, brows, lashes, mouth, highlights
 
 In Unreal the characters stay normally lit (Lumen GI, cast shadows, interior lamps, night) and a stencil-
@@ -19,12 +20,20 @@ specular reflections off (no plastic sheen). The Cycles previews evaluate the sa
 (build.preview_material).
 """
 
-# half-Lambert threshold, edge width, shadow multiplier (linear RGB), rim strength, hair highlight strength
+# half-Lambert threshold, edge width, shadow multiplier (linear RGB), rim strength, hair highlight strength.
+# Optional second step: below `threshold2` the shadow deepens to `shadow2` (the core shadow under arms, chins
+# and folds); `terminator` (colour, strength) is a thin saturated band just inside the shadow edge - the warm
+# line anime skin has where light turns to shade. Unreal's M_DA_Cel reads rim / spec; the other fields are
+# exported for it too (optional: a master material that does not know them ignores them).
 CLASSES = {
-    "skin": dict(threshold=0.50, soft=0.035, shadow=(0.94, 0.70, 0.66), rim=0.22, spec=0.0),
-    "face": dict(threshold=0.30, soft=0.10, shadow=(0.96, 0.76, 0.72), rim=0.12, spec=0.0),
-    "hair": dict(threshold=0.48, soft=0.03, shadow=(0.58, 0.58, 0.74), rim=0.30, spec=0.45),
-    "cloth": dict(threshold=0.50, soft=0.03, shadow=(0.62, 0.64, 0.82), rim=0.18, spec=0.0),
+    "skin": dict(threshold=0.50, soft=0.035, shadow=(0.95, 0.72, 0.67), rim=0.20, spec=0.0,
+                 threshold2=0.20, shadow2=(0.86, 0.57, 0.55), terminator=(1.0, 0.50, 0.40), terminator_strength=0.38),
+    "face": dict(threshold=0.30, soft=0.10, shadow=(0.96, 0.76, 0.72), rim=0.10, spec=0.0,
+                 terminator=(1.0, 0.56, 0.46), terminator_strength=0.22),
+    "hair": dict(threshold=0.48, soft=0.03, shadow=(0.62, 0.60, 0.76), rim=0.16, spec=0.45,
+                 threshold2=0.18, shadow2=(0.44, 0.43, 0.62)),
+    "cloth": dict(threshold=0.50, soft=0.03, shadow=(0.66, 0.67, 0.84), rim=0.15, spec=0.0,
+                  threshold2=0.20, shadow2=(0.48, 0.50, 0.71)),
     "flat": dict(threshold=-1.0, soft=0.0, shadow=(1.0, 1.0, 1.0), rim=0.0, spec=0.0),
 }
 

@@ -82,6 +82,8 @@ ADAStudentCharacter::ADAStudentCharacter()
 	Avatar = CreateDefaultSubobject<UDAAvatarComponent>(TEXT("Avatar"));
 	Avatar->SetupAttachment(GetCapsuleComponent());
 	Avatar->SetRelativeLocation(AvatarOnFoot);
+	// The protagonist's own bespoke model (Tools/dai/anime/hero.py); its jacket keeps the dorm tint.
+	Avatar->CastMesh = TEXT("SK_Anime_Hero");
 
 	Bike = CreateDefaultSubobject<UDAMotorcycleComponent>(TEXT("Motorcycle"));
 	Bike->SetupAttachment(GetCapsuleComponent());

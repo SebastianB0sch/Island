@@ -9,7 +9,8 @@ exported as UCX_ convex hulls with the mesh (UE: simple collision; the visual tr
 the player and the NPCs stop at the furniture instead of walking through it.
 
 An item gets no box when it is
-  * flat on the floor (lower than 0.15 m: rugs, mats, floor decals) - you walk over it,
+  * flat on the floor (lower than 0.15 m: rugs, mats, floor decals) - you walk over it; single pieces up to
+    0.12 m that lie on a floor (cushions, futons) are left out before the grouping for the same reason,
   * hung on a wall or from the ceiling (its bottom over 1.0 m above the floor under it),
   * architecture rather than furniture (longer than 6 m: trims, cornices, rails, beams),
   * mostly air (pieces fill < 2 % of its box: railings, frames, mobiles),
@@ -26,6 +27,7 @@ from . import palette
 SOFT_KINDS = {"water", "pool", "river", "smoke", "beam", "hologram", "waterfall", "flow", "lava", "foliage", "glass"}
 MIN_H, MAX_LEN, MAX_LIFT, MIN_FILL, MIN_SIZE = 0.15, 6.0, 1.0, 0.02, 0.25
 MIN_THICK = 0.03      # window linings / thin trim boards are not furniture
+FLAT_ON_FLOOR = 0.12  # pieces this low that lie on a floor are walked over (cushions, mats, futons)
 GAP = 0.03            # pieces closer than this belong to one item
 
 
@@ -130,6 +132,13 @@ def blockers(mb, floor=None, doors=(), log=None):
             continue
         if d[2] < 0.06 and max(d[0], d[1]) > 0.3 and mn[2] < 0.15:   # a rug / mat on the floor
             continue
+        if floor is not None and d[2] <= FLAT_ON_FLOOR and max(d[0], d[1]) > 0.3:
+            # the same on any storey: a cushion, mat or futon lying on the floor (or a cloth on a solid table)
+            # is walked over.  Left in, it also glues the furniture round it into one item - four floor
+            # cushions round a low table became one 2.2 m box right across a 4 m room.
+            fz = floor((mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, mx[2] + 0.05)
+            if fz is not None and mn[2] - fz < 0.06:
+                continue
         if min(d) < MIN_THICK:                         # window linings / thin trim boards
             continue
         keep.append((mn, mx, pts))

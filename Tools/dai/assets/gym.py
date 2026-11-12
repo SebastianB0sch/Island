@@ -580,9 +580,10 @@ def _annexes(aset, mb, nc):
         mb.box_mm((x0 + 0.15, y0 + 0.2 + k * 0.09, FLG + 0.42), (x0 + 1.75, y0 + 0.27 + k * 0.09, FLG + 0.45), K.WOOD)
     for xx in (x0 + 0.3, x0 + 1.6):
         mb.box_mm((xx - 0.03, y0 + 0.2, FLG), (xx + 0.03, y0 + 0.62, FLG + 0.42), K.WOOD)
-    nc.box((x0 + 0.02, (y0 + y1) / 2, FLG + 1.45), (0.04, 1.4, 0.03), "M_DetSilver")
+    ry = -11.2 - 0.6 - 0.12 - 0.55          # beside the doorway (centre y -11.2, 1.2 wide), not across it
+    nc.box((x0 + 0.02, ry, FLG + 1.45), (0.04, 1.1, 0.03), "M_DetSilver")
     for k, c in enumerate(("M_IntFabricWhite", "M_IntFabricBlue", "M_IntFabricWhite", "M_IntFabricYellow")):
-        nc.box((x0 + 0.05, (y0 + y1) / 2 - 0.5 + k * 0.33, FLG + 1.15), (0.04, 0.26, 0.6), c)
+        nc.box((x0 + 0.05, ry - 0.405 + k * 0.27, FLG + 1.15), (0.04, 0.22, 0.6), c)
     for (ax, ay, bx, by) in ((24.5, y1 - 1.3, 28.7, y1 - 0.35), (x1 - 1.2, -13.5, x1 - 0.35, -10.5)):   # duckboards
         n = int((bx - ax) / 0.12) if bx - ax > by - ay else int((by - ay) / 0.12)
         for k in range(n):
@@ -948,7 +949,7 @@ def _showers_more(aset, mb, nc, rng):
                             "M_IntFabricOrange")[j], seg=8)
     aset.prop("SM_Int_Bucket", (28.9, -12.5, z), 0.0)
     K.poster(nc, aset, x0, -13.3, z + 1.75, 90.0, 0.42, 0.6, "M_IntPoster2", "RINSE FIRST", (1, 1, 1), 0.05)
-    with mb.at((x0 + 0.45, -10.55, z), rot=8.0), nc.at((x0 + 0.45, -10.55, z), rot=8.0):   # towel hamper
+    with mb.at((x0 + 0.45, y1 - 0.32, z), rot=8.0), nc.at((x0 + 0.45, y1 - 0.32, z), rot=8.0):   # towel hamper
         mb.box((0, 0, 0.45), (0.6, 0.45, 0.7), "M_IntFabricBlue")
         for s_ in (-1, 1):
             nc.cylinder((s_ * 0.25, 0, 0.0), 0.04, 0.08, "M_Black", seg=8)
@@ -1014,7 +1015,9 @@ def _first_aid(aset, mb, nc, rng):
     aset.text("AED", K.wall_point(x1, 20.6, -90.0, 0.14, z + 1.38), -90.0, size=0.08, color=(1, 1, 1))
     K.poster(nc, aset, x1, 22.6, z + 2.1, -90.0, 0.9, 0.45, K.TRIM_WHITE, text="FIRST AID",
              text_color=(0.75, 0.05, 0.05), text_size=0.13)
-    aset.prop("SM_Int_FoldingScreen", (-27.9, 19.3, z), 70.0)
+    # (0.4 m further from the bleacher end wall: at x -27.9 it left 0.45 m there and, with the day bed behind it,
+    # shut the corner off)
+    aset.prop("SM_Int_FoldingScreen", (-28.3, 19.3, z), 70.0)
     aset.prop("SM_Int_PlasticChair", (-28.05, 21.2, z), -90.0)
     aset.prop("SM_Int_SideTable", (-29.2, 22.1, z), 90.0)
     nc.cylinder((-29.25, 22.0, z + 0.55), 0.06, 0.2, "M_IntGlassClear", seg=10)
@@ -1039,18 +1042,24 @@ def _gallery(aset, mb, nc, rng, sx):
     y0, y1 = AY0, AY1
     z = ZG
     mb.box_mm((lo, y0, z), (hi, y1, z + 0.012), "M_GalleryFloor", skip=("-z",))
-    # stair (19 x 0.18 m risers, 0.28 m treads) and the landing at the roof edge
-    K.stairs(mb, sx * 11.48, -9.4, FLG, z, 0.0 if sx > 0 else 180.0, 1.0, mat=K.METAL, stringer="M_DarkMetal",
-             rail="M_Metal", rail_sides=(1, -1))
-    la, lb = sorted((sx * AX, sx * (AX + 0.8)))
+    # stair (0.18 m risers, 0.28 m treads) ending exactly at the landing on the roof edge.  K.stairs picks the
+    # riser count itself (18 here): started at a fixed x = 11.48 "for 19 risers" the flight stopped 26 cm short
+    # of the landing and left a slot open to the court 3 m below.
+    n_st = max(2, int(round((z - FLG) / 0.18)))
+    K.stairs(mb, sx * (AX - 0.28 * n_st), -9.4, FLG, z, 0.0 if sx > 0 else 180.0, 1.0, mat=K.METAL,
+             stringer="M_DarkMetal", rail="M_Metal", rail_sides=(1, -1))
+    # landing 1.2 m long: with 0.8 m the way off it into the gallery, between the end rail and the first post
+    # of the edge railing, was 76 cm - exactly the character capsule
+    LAND = 1.2
+    la, lb = sorted((sx * AX, sx * (AX + LAND)))
     mb.box_mm((la, -9.9, z - 0.12), (lb, -8.9, z), K.METAL, mats={"+z": "M_GalleryFloor"})
     for xx in (la + 0.04, lb - 0.04):
         mb.box((xx, -8.95, (FLG + z) / 2), (0.08, 0.08, z - FLG), "M_DarkMetal")
-    xe = sx * (AX + 0.8)
+    xe = sx * (AX + LAND)
     mb.railing([(xe, -9.9, z), (xe, -8.9, z)], 1.0, "M_Metal", post_spacing=1.0)
     mb.railing([(la, -8.9, z), (lb, -8.9, z)], 1.0, "M_Metal", post_spacing=0.6)
     # railing along the gallery edge and the end, leaving the landing open
-    xa = sx * (AX + 0.85)
+    xa = sx * (AX + LAND + 0.05)
     mb.railing([(xa, y1 - 0.04, z), (sx * (GX1 - WT - 0.05), y1 - 0.04, z)], 1.05, "M_Metal", post_spacing=1.6)
     # end rail only beside the stair landing: the rest of the end opens onto the front gallery over the foyer
     mb.railing([(sx * (AX + 0.04), y1 - 0.04, z), (sx * (AX + 0.04), FG_Y1 + 0.05, z)], 1.05, "M_Metal", post_spacing=0.6)

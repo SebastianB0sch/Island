@@ -734,7 +734,7 @@ def _vertex_s(pts):
 # ================================================================== QUAY
 def _quay(aset, mb, nc):
     # wall body: wet dark concrete below the splash zone, harbor concrete above
-    mb.box_mm((QX0, QY, WALL_BOT), (QX1, QY + 3.0, -2.2), DCONC, skip=("+y", "-z"))
+    mb.box_mm((QX0, QY, WALL_BOT), (QX1, QY + 3.0, -2.2), DCONC, skip=("+y", "-z", "+z"))   # (top hidden by the course above)
     mb.box_mm((QX0, QY, -2.2), (QX1, QY + 3.0, -0.55), CONC, skip=("+y", "-z", "+z"))
     # coping beam (edge strip), slightly proud of the paving
     mb.box_mm((QX0 - 0.35, COPE_Y0, -0.55), (QX1 + 0.35, QY + 1.4, COPE_TOP), CONC, skip=("-z",))
@@ -2667,7 +2667,9 @@ def _crane_cab(aset, mb, nc, x, ty, top, by1):
     # ---- stair tower (land side of the rail): lane A climbs south, lane B north
     la, lb, wd = cx - 0.5, cx + 0.5, 0.9
     ys, yn = yc1, yc1 + 1.0 + 2.8 + 1.0           # south / north faces of the tower
-    tx0, tx1 = la - 0.45, lb + 0.45
+    # tower 0.15 m wider than the two flights each side: flush with them, the top landing in front of the
+    # machinery-house door was 0.79 m between its railings - barely the 0.76 m character capsule
+    tx0, tx1 = la - 0.6, lb + 0.6
     for (k, lane, yaw, ystart) in ((0, la, -90.0, yn - 1.0), (1, lb, 90.0, ys + 1.0), (2, la, -90.0, yn - 1.0),
                                    (3, lb, 90.0, ys + 1.0), (4, la, -90.0, yn - 1.0)):
         K.stairs(mb, lane, ystart, k * 1.8, (k + 1) * 1.8, yaw, wd, mat="M_IntMetal", riser=None, stringer=DMETAL,
@@ -2880,7 +2882,9 @@ def _terminal(aset, mb, nc, im, inc):
     # floor slab of the control room (stairwell for the spiral stair), blue band = slab edge
     scx, scy = 44.45, 21.45
     K.slab(mb, tx0, ty0, tx1, ty1, tz, 0.4, "M_IntWoodFloor", bottom=K.CEIL, side=BLUE,
-           holes=[(scx - 1.25, scy, tx1 - WT, ty1 - WT), (scx, scy - 1.25, tx1 - WT, scy)])
+           holes=[(scx - 1.25, scy, scx, ty1 - WT), (scx, scy - 1.25, tx1 - WT, ty1 - WT)])
+    # (the same L-shaped well as two holes whose south edges both lie on slab: K.slab trims each hole's south edge
+    # with a thin fin, and split at y = scy the fin of the north part hung 0.4 m deep across the stair's last turn)
     for a, b in (((tx0 - 0.1, ty0 - 0.1), (tx1 + 0.1, ty0)), ((tx0 - 0.1, ty1), (tx1 + 0.1, ty1 + 0.1)),
                  ((tx0 - 0.1, ty0), (tx0, ty1)), ((tx1, ty0), (tx1 + 0.1, ty1))):
         mb.box_mm((a[0], a[1], 5.6), (b[0], b[1], tz), BLUE)
@@ -3849,8 +3853,12 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     rh = LH_STAIR_R + 0.07
     _polar_slab(mb, rh, _lh_ri(zt) + 0.04, 0.0, 360.0, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood",
                 "M_IntWoodDark", caps=False)
-    _polar_slab(mb, 0.15, rh, a_top, a_top + 110.0, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood", "M_IntWoodDark")
-    rail = [_polar(rh, a_top + 110.0 + k * 10.0)[:2] for k in range(int((360.0 - 130.0) / 10.0) + 1)]
+    # landing beside the stair top: three treads long.  It hangs over the turn below, where the stair is
+    # 3.0 m lower at its near end and gains 19 cm per tread - five treads (110 deg) long it left 1.74 m of
+    # headroom over the tread just past its far edge, 10 cm short for the 1.84 m character capsule.
+    land = 3 * LH_STEP
+    _polar_slab(mb, 0.15, rh, a_top, a_top + land, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood", "M_IntWoodDark")
+    rail = [_polar(rh, a_top + land + k * 10.0)[:2] for k in range(int((360.0 - land - 20.0) / 10.0) + 1)]
     K.railing(mb, rail, zt, h=1.0, mat=K.TRIM_WOOD, spacing=0.18)
     K.spiral_stairs(mb, 0.0, 0.0, 0.95, zt, 0.15, LH_STAIR_R, a0=a_start, step_deg=LH_STEP, mat=STEEL,
                     core=LH_R, rail=None)
@@ -3886,7 +3894,10 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     for i in range(n_steps):
         am = math.radians(a_start + LH_STEP * (i + 0.5) + 1.0)
         z = 0.95 + rise * (i + 1)
-        p = (math.cos(am) * (LH_STAIR_R - 0.05), math.sin(am) * (LH_STAIR_R - 0.05))
+        # just outside the treads (in the gap to the gallery rings): on the treads it left 77 cm between the
+        # newel and the rail, less than the 76 cm character capsule needs once the rail's straight segments
+        # cut the corners (Tools/world/check_reachability.py)
+        p = (math.cos(am) * (LH_STAIR_R + 0.03), math.sin(am) * (LH_STAIR_R + 0.03))
         if i in skip:
             prev = None
             continue

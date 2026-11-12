@@ -39,6 +39,10 @@ ARM_BONES = ("upperarm", "lowerarm", "hand", "thumb", "index", "middle", "ring",
 LEG_BONES = ("thigh", "calf", "foot", "ball")
 COVER_REACH = 0.05                  # an outer layer this close above a vertex hides it
 SKIN_MARGIN = 0.022                 # covered skin / cloth this close to visible skin / cloth stays
+SHOULDER_ROUND = 0.050             # how far (m) the shoulder tips of the torso block are rounded in
+SLEEVE_HEAD = 0.55               # share of the upper arm's weight a sleeve head hands to the clavicle
+KNEE_SMOOTH = 24                    # weight smoothing passes on trouser legs (no sharp fold behind a bent knee)
+SKIRT_SPLIT = (0.75, 0.5)           # share of a skirt's front / back centre chain handed to the thigh-side chains
 THIGH_FOLLOW = 0.55                 # how much hanging cloth (skirt, coat tails) follows the thigh under it
 
 
@@ -184,6 +188,11 @@ class VBody:
         self.neck_r = float(np.interp(neck_mid, zs, R.mean(1)))
         nb = np.nonzero((zs > z_sl) & (ext <= self.neck_r + 0.014))[0]
         z_nb = max(float(zs[nb.min()]) if len(nb) else z_sl + 0.03, z_sl + 0.012)   # neck base
+        # the shoulder tips round over into the sleeve heads (a cut straight down at x_lim leaves a corner there)
+        bev = SHOULDER_ROUND * _smooth((zs - (z_sl - 0.075)) / 0.075) ** 1.5
+        sx_ = np.abs(dirs[:, 0])[None]
+        R = np.where(sx_ > 0.45, np.minimum(R, (x_lim - bev)[:, None] / np.maximum(sx_, 1e-3)), R)
+        R = np.where((zs > z_sl - 0.09)[:, None], 0.5 * R + 0.5 * _blur(R, (0.0, 1.2), wrap=(1,)), R)
         # rows below the crotch: the pattern block closes between the legs (like the atelier's)
         low = np.arange(crotch - 0.05, zs[0] - 1e-6, 0.006)
         k = 1.0 - 0.55 * _smooth((zs[0] - low) / 0.045)
@@ -366,7 +375,7 @@ class VBody:
         # at the shoulder a sleeve has the ease of its garment's body (the atelier cuts sleeves 0.72 closer)
         ease = ease * (1.0 + 0.39 * (1.0 - float(_smooth((x - S.SHOULDER_X) / 0.08))))
         r = (self.arm(self.xv(x), t) / math.cos(math.pi / n) + ease) * max(cap, 0.12)   # chords clear the arm
-        drop = 0.026 * (1.0 - float(_smooth((x - 0.10) / 0.075)))             # the shoulder slopes below the joint
+        drop = 0.021 * (1.0 - float(_smooth((x - 0.10) / 0.075)))             # the shoulder slopes below the joint
         return np.stack([np.full(n, side * x), -np.cos(t) * r, S.SHOULDER - drop + np.sin(t) * r * squash], axis=1)
 
     def leg_ring(self, z, ease=0.0, n=16, side=1.0, wide=1.0):
@@ -444,6 +453,13 @@ def _skin_part(body, part):
     else:
         loc, _, idx = body.nearest(part.v)
         Wp = body.weights_at(loc, idx).astype(np.float64)
+        if part.name.endswith(("_l", "_r")):
+            # a part of one limb never takes weights from the other one ("nearest skin" does between the legs)
+            mine, other = part.name[-2:], "_r" if part.name.endswith("_l") else "_l"
+            for i, g in enumerate(body.gnames):
+                if g.endswith(other) and g[:-2] + mine in body.gnames:
+                    Wp[:, body.gnames.index(g[:-2] + mine)] += Wp[:, i]
+                    Wp[:, i] = 0.0
         # soften the jumps of "nearest" (armpits, crotch) along the part's own surface
         key = np.round(part.v / 1e-5).astype(np.int64)
         _, inv = np.unique(key, axis=0, return_inverse=True)
@@ -462,7 +478,7 @@ def _skin_part(body, part):
             np.add.at(Wm, inv, Wp)
             np.add.at(cnt, inv, 1.0)
             Wm /= cnt[:, None]
-            for _ in range(3):
+            for _ in range(KNEE_SMOOTH if part.name.startswith("pants_") else 3):
                 acc = np.zeros_like(Wm)
                 deg = np.zeros(m)
                 np.add.at(acc, e[:, 0], Wm[e[:, 1]])
@@ -472,6 +488,17 @@ def _skin_part(body, part):
                 Wm = 0.5 * Wm + 0.5 * acc / np.maximum(deg, 1.0)[:, None]
             Wp = Wm[inv]
     names = body.gnames
+    ax = getattr(part, "arm_x", None)
+    if ax is not None and part.name.startswith("sleeve"):
+        # the sleeve head stays with the shoulder: turning it rigidly with the upper arm swings its top out
+        # into a square epaulette when the arm hangs
+        side = "l" if part.v[:, 0].mean() > 0 else "r"
+        if f"upperarm_{side}" in names and f"clavicle_{side}" in names:
+            ua, cl = names.index(f"upperarm_{side}"), names.index(f"clavicle_{side}")
+            k = SLEEVE_HEAD * (1.0 - _smooth((ax - (S.SHOULDER_X - 0.035)) / 0.11))
+            moved = Wp[:, ua] * k
+            Wp[:, ua] -= moved
+            Wp[:, cl] += moved
     if chains:
         # hanging cloth: mostly the pelvis; the thigh under it only takes a share (none on the centre line)
         legs = [i for i, g in enumerate(names) if g.startswith(LEG_BONES)]
@@ -486,6 +513,19 @@ def _skin_part(body, part):
                 if c0 is not None:
                     for name, m in ((f"coattail_01_{j}", part.v[:, 0] > 0), (f"coattail_07_{j}", part.v[:, 0] <= 0)):
                         chains[name] = chains.get(name, 0.0) + c0 * m
+        if not coat:
+            # a closed skirt drapes over a raised thigh as one tent: its centre chains (pelvis) would hold the
+            # front back while the neighbouring thigh chains lift, and the hem would open like a slit
+            pre = next(b for b in chains).rsplit("_", 2)[0]
+            t = _smooth(part.v[:, 0] / 0.16 + 0.5)                       # 0 right .. 1 left
+            for (c, left, right), k in zip((("00", "01", "07"), ("04", "03", "05")), SKIRT_SPLIT):
+                for j in (1, 2):
+                    c0 = chains.get(f"{pre}_{c}_{j}")
+                    if c0 is None:
+                        continue
+                    chains[f"{pre}_{c}_{j}"] = c0 * (1.0 - k)
+                    for name, m in ((f"{pre}_{left}_{j}", t), (f"{pre}_{right}_{j}", 1.0 - t)):
+                        chains[name] = chains.get(name, 0.0) + c0 * k * m
         follow = 1.0 if long_top else THIGH_FOLLOW
         k = _smooth(share / 0.05) * (1.0 - follow * _smooth(np.abs(part.v[:, 0]) / 0.07))
         moved = Wp[:, legs].sum(1) * k
@@ -498,6 +538,15 @@ def _skin_part(body, part):
     Wp /= np.maximum(Wp.sum(1, keepdims=True), 1e-9)
     Wp *= (1.0 - share)[:, None]
     part.w = {names[i]: Wp[:, i] for i in range(Wp.shape[1]) if Wp[:, i].max() > 1e-4}
+    if len(chains) > 4:
+        # ...and at most four hem chain bones on top of them (eight influences in all, as before)
+        keys = sorted(chains)
+        Cw = np.stack([np.broadcast_to(np.asarray(chains[k], np.float64), (len(part.v),)) for k in keys], axis=1)
+        tot = Cw.sum(1)
+        cut = np.partition(Cw, -4, axis=1)[:, -4][:, None]
+        Cw = np.where(Cw >= cut, Cw, 0.0)
+        Cw *= (tot / np.maximum(Cw.sum(1), 1e-12))[:, None]
+        chains = {k: Cw[:, i] for i, k in enumerate(keys) if Cw[:, i].max() > 1e-4}
     part.w.update(chains)
     return share
 
@@ -573,7 +622,7 @@ def _delete_faces(me, pick):
     me.update()
 
 
-def covered_skin(body_obj, body, parts, shares, log=print):
+def covered_skin(body_obj, body, parts, shares, log=print, sleeved=False):
     """Delete the base model's own tops / bottoms now; returns the rest-pose centres of the skin faces the
     garments cover, for strip_skin() - which runs after the materials are made: the body texture is shared
     by every look on the base model and is repainted from the whole skin (outfit.fix_skin)."""
@@ -585,6 +634,12 @@ def covered_skin(body_obj, body, parts, shares, log=print):
     cen = np.array([polys[f].center[:] for f in body.skin_faces])
     nrm = np.array([polys[f].normal[:] for f in body.skin_faces])
     hid = _covered(tree, cen, nrm)
+    if sleeved:
+        # the top of the shoulder lies under the rounded shoulder tip / inside the sleeve head, where no cloth
+        # is straight above it: under a sleeved top it goes all the same
+        sx, sz = float(body.h["upperarm_l"][0]), float(body.h["upperarm_l"][2])
+        hid |= (np.abs(np.abs(cen[:, 0]) - sx) < 0.065) & (cen[:, 2] > sz - 0.035) & (nrm[:, 2] > -0.1) \
+            & (cen[:, 2] < body.z_nb)
     # hands, head and feet always stay
     hid &= (np.abs(cen[:, 0]) < float(body.h["hand_l"][0]) - 0.02) & (cen[:, 2] < body.z_nb + 0.01)
     hid &= cen[:, 2] > float(body.h["foot_l"][2]) + 0.02
@@ -652,10 +707,12 @@ def build(arm, meshes, body_obj, rig, entry, key, log=print):
     for p in parts:
         if p.name.startswith("sleeve"):          # no ink line round the sleeve head inside the shoulder
             p.outline = np.where(np.abs(p.v[:, 0]) < S.SHOULDER_X + 0.01, 0.0, p.outline)
+        if p.arm_space:
+            p.arm_x = np.abs(p.v[:, 0]).copy()
         p.v = body.to_model(p.v, arm=p.arm_space)
         p.round_c = body.to_model(p.round_c, arm=p.arm_space)[0]
     shares = [_skin_part(body, p) for p in parts]
-    hidden = covered_skin(body_obj, body, parts, shares, log)
+    hidden = covered_skin(body_obj, body, parts, shares, log, sleeved=not any(a < 0.2 for a, _ in kit.skin["arms"]))
     hide_layers(body, parts, shares, log)
     parts = [p for p in parts if p.f]
     line = entry.get("outline", 0.0022) * 1.15

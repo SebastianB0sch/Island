@@ -445,7 +445,209 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
     return done
 
 
+# --------------------------------------------------------------------------- face parts atlas
+FACE_PARTS_SIZE = (2048, 1024)
+FACE_PARTS_PAD = 6
+
+
+def merge_face_parts(key, obj, log=print, repaint=None):
+    """One material instead of eight for the flat face parts (brows, lashes, eye lines, iris, eye white,
+    highlights, mouth): their textures - only the part each one's faces really use - are packed into one
+    cut-out atlas (T_<Key>_FaceParts) and the UVs are moved there. Opaque parts become alpha 1 in the atlas,
+    cut-out parts keep their alpha; faces that only ever show transparent texels are deleted. The mesh's
+    vertices are untouched, so the face morphs are too. repaint(source material, RGBA sheet, {source: sheet})
+    returns a part's own replacement sheet (the protagonist's eyes, hero.repaint). Returns the new material's
+    name (None: nothing merged)."""
+    import bmesh
+    from .build import preview_material
+    from .cel import classify
+    me = obj.data
+    uvl = me.uv_layers.active
+    if uvl is None:
+        return None
+    nl = len(me.loops)
+    uv = np.empty(nl * 2)
+    uvl.data.foreach_get("uv", uv)
+    uv = uv.reshape(-1, 2)
+    jobs = []
+    sheets = {}
+    if repaint is not None:
+        for slot in obj.material_slots:
+            spec = palette.MATERIALS.get(slot.material.name) if slot.material else None
+            if spec and spec.get("base") and os.path.exists(os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")):
+                with Image.open(os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")) as im:
+                    sheets[spec.get("source_material", slot.material.name)] = np.asarray(im.convert("RGBA")).copy()
+    for i, slot in enumerate(obj.material_slots):
+        mat = slot.material
+        spec = palette.MATERIALS.get(mat.name) if mat else None
+        if not spec or classify(mat.name, spec) != "flat" or not spec.get("base") or spec.get("kind") != "toon":
+            continue
+        path = os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")
+        loops = np.array([li for p in me.polygons if p.material_index == i for li in p.loop_indices], np.int64)
+        if not len(loops) or not os.path.exists(path):
+            continue
+        q = uv[loops]
+        base = np.floor(q.min(0) + 1e-6)                    # whole-tile offset of this part's UVs
+        q = q - base
+        if q.max() > 1.0 + 1e-4:                            # tiled UVs: cannot go into an atlas
+            continue
+        with Image.open(path) as im:
+            tex = np.asarray(im.convert("RGBA")).copy()
+        if repaint is not None:
+            tex = repaint(spec.get("source_material", mat.name), tex, sheets)
+        h, w = tex.shape[:2]
+        x0, x1 = int(np.floor(q[:, 0].min() * w)), int(np.ceil(q[:, 0].max() * w))
+        y0, y1 = int(np.floor((1.0 - q[:, 1].max()) * h)), int(np.ceil((1.0 - q[:, 1].min()) * h))
+        x0, y0, x1, y1 = max(x0 - 2, 0), max(y0 - 2, 0), min(x1 + 2, w), min(y1 + 2, h)
+        crop = tex[y0:y1, x0:x1]
+        if not spec.get("masked"):
+            crop[..., 3] = 255
+        jobs.append(dict(slot=i, loops=loops, base=base, crop=crop, box=(x0, y0), size=(w, h),
+                         empty=bool(crop[..., 3].max() < 16)))
+    live = [j for j in jobs if not j["empty"]]
+    if len(live) < 2:
+        return None
+    AW, AH = FACE_PARTS_SIZE
+    pad = FACE_PARTS_PAD
+    for scale in (1.0, 0.85, 0.7, 0.6, 0.5, 0.4, 0.3):
+        # shelf packing, tallest first
+        x = y = row = 0
+        ok = True
+        for j in sorted(live, key=lambda j: -j["crop"].shape[0]):
+            cw, ch = max(2, int(round(j["crop"].shape[1] * scale))), max(2, int(round(j["crop"].shape[0] * scale)))
+            if x + cw + 2 * pad > AW:
+                x, y, row = 0, y + row, 0
+            if cw + 2 * pad > AW or y + ch + 2 * pad > AH:
+                ok = False
+                break
+            j["rect"] = (x + pad, y + pad, cw, ch)
+            x += cw + 2 * pad
+            row = max(row, ch + 2 * pad)
+        if ok:
+            break
+    else:
+        return None
+    atlas = np.zeros((AH, AW, 4), np.uint8)
+    for j in live:
+        rx, ry, cw, ch = j["rect"]
+        tile = j["crop"]
+        if (cw, ch) != (tile.shape[1], tile.shape[0]):
+            tile = np.asarray(Image.fromarray(tile, "RGBA").resize((cw, ch), Image.LANCZOS))
+        # colour bleeds into the padding (alpha stays 0 there unless the part is opaque): no dark fringes
+        big = np.pad(tile, ((pad, pad), (pad, pad), (0, 0)), mode="edge")
+        if tile[..., 3].min() < 255:
+            big[..., 3] = np.pad(tile[..., 3], ((pad, pad), (pad, pad)), mode="constant")
+        atlas[ry - pad:ry + ch + pad, rx - pad:rx + cw + pad] = big
+        w, h = j["size"]
+        q = uv[j["loops"]] - j["base"]
+        px = q[:, 0] * w - j["box"][0]
+        py = (1.0 - q[:, 1]) * h - j["box"][1]
+        uv[j["loops"], 0] = (rx + px * cw / j["crop"].shape[1]) / AW
+        uv[j["loops"], 1] = 1.0 - (ry + py * ch / j["crop"].shape[0]) / AH
+    uvl.data.foreach_set("uv", uv.ravel())
+    name = f"M_Anime_{key}_FaceParts"
+    rel = f"{TEX_REL}/{key}/T_{key}_FaceParts"
+    atomic.save_image(Image.fromarray(atlas, "RGBA"), os.path.join(C.OUT_TEXTURES, rel + ".png"), optimize=True)
+    palette.register({name: dict(kind="toon", color=(1.0, 1.0, 1.0), rough=0.85, fill=0.45, base=rel, masked=True,
+                                 cel="flat", source_material="FaceParts")})
+    new = preview_material(name)
+    first = live[0]["slot"]
+    olds = {obj.material_slots[j["slot"]].material.name for j in jobs}
+    obj.material_slots[first].material = new
+    remap = {j["slot"]: first for j in live}
+    for p in me.polygons:
+        if p.material_index in remap:
+            p.material_index = remap[p.material_index]
+    gone = {j["slot"] for j in jobs if j["empty"]}
+    if gone:
+        _delete_poly_faces(me, gone)
+    _drop_unused_slots(obj)
+    # the per-character textures of the merged parts are no longer referenced by anything
+    for n in olds:
+        b = palette.MATERIALS.get(n, {}).get("base", "")
+        if b.startswith(f"{TEX_REL}/{key}/"):
+            try:
+                os.remove(os.path.join(C.OUT_TEXTURES, b + ".png"))
+            except OSError:
+                pass
+    log(f"  anime: {key}: {len(live)} face part materials merged into {name}"
+        + (f", {len(gone)} fully transparent part(s) dropped" if gone else ""))
+    return name
+
+
+def _delete_poly_faces(me, slots):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in slots], context="FACES")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+
+
 # --------------------------------------------------------------------------- outline
+SKIN_OUTLINE_MAT = "M_Anime_OutlineSkin"
+SKIN_OUTLINE_COLOR = (0.40, 0.17, 0.15)      # skin is inked in a dark red-brown, not in the cloth's near-black
+
+
+def _skin_outline_material():
+    from .build import preview_material
+    palette.register({SKIN_OUTLINE_MAT: dict(kind="outline", color=SKIN_OUTLINE_COLOR)})
+    return preview_material(SKIN_OUTLINE_MAT)
+
+
+def add_face_outline(obj, thickness, log=print):
+    """A thin ink line round the face's outer contour (jaw, cheeks, ears): an inverted hull of the face skin
+    only, its width fading to nothing over the frontal features so that nose, lips and eye sockets draw no
+    lines of their own. The hull is a copy of skin vertices, so it follows the face morphs."""
+    import bmesh
+    me = obj.data
+    skin = {i for i, s in enumerate(obj.material_slots) if s.material and role_of(s.material.name) == "skin"}
+    if not skin:
+        return 0
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.normal_update()
+    orig = [f for f in bm.faces if f.material_index in skin]
+    if not orig:
+        bm.free()
+        return 0
+    zs = [v.co.z for f in orig for v in f.verts]
+    xs = [abs(v.co.x) for f in orig for v in f.verts]
+    z_lo, z_hi, half = min(zs), max(zs), max(max(xs), 1e-3)
+
+    def width(v):
+        n, c = v.normal, v.co
+        front = min(1.0, max(0.0, (-n.y - 0.35) / 0.35))                    # 1: facing the viewer
+        inner = min(1.0, max(0.0, (0.62 * half - abs(c.x)) / (0.22 * half)))   # 1: between the cheeks
+        above = min(1.0, max(0.0, (c.z - (z_lo + 0.10 * (z_hi - z_lo))) / (0.06 * (z_hi - z_lo))))
+        return 1.0 - max(front * inner, inner * above * 0.999)
+
+    geom = bmesh.ops.duplicate(bm, geom=orig)
+    new_verts = [g for g in geom["geom"] if isinstance(g, bmesh.types.BMVert)]
+    new_faces = [g for g in geom["geom"] if isinstance(g, bmesh.types.BMFace)]
+    wd = {v: width(v) for v in new_verts}
+    drop = [f for f in new_faces if max(wd[v] for v in f.verts) < 0.08]
+    dropped = set(drop)
+    keep = [f for f in new_faces if f not in dropped]
+    for v in new_verts:
+        v.co += v.normal * (thickness * wd[v])
+    bmesh.ops.reverse_faces(bm, faces=keep)
+    mat = _skin_outline_material()
+    bmesh.ops.delete(bm, geom=drop, context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    if mat.name not in me.materials:
+        me.materials.append(mat)
+    idx = list(me.materials).index(mat)
+    for f in keep:
+        f.material_index = idx
+        f.smooth = True
+    n = len(keep)
+    bm.to_mesh(me)
+    bm.free()
+    return n
+
+
 def _alpha_lookup(obj):
     """face -> visible? for cut-out materials: texture alpha at the face's UV centre (hidden outfit parts of
     VRoid models are transparent texels, and must not get an outline)."""
@@ -508,8 +710,15 @@ def add_outline(obj, thickness, skip=("face",)):
     if mat.name not in me.materials:
         me.materials.append(mat)
     idx = list(me.materials).index(mat)
+    skin_slots = {i for i, s in enumerate(obj.material_slots) if s.material and role_of(s.material.name) == "skin"}
+    skin_idx = idx
+    if skin_slots:
+        sm = _skin_outline_material()
+        if sm.name not in me.materials:
+            me.materials.append(sm)
+        skin_idx = list(me.materials).index(sm)
     for f in new_faces:
-        f.material_index = idx
+        f.material_index = skin_idx if f.material_index in skin_slots else idx
         f.smooth = True
     bm.to_mesh(me)
     bm.free()
@@ -563,6 +772,14 @@ def build_model(cid, entry, key_name, log=print):
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
+    face_obj = next((m for m in meshes if m.name.startswith("Face")), None)
+    if face_obj is not None:
+        repaint = None
+        if entry.get("bespoke"):
+            from . import hero              # the protagonist's own eyes and brows
+            repaint = hero.repaint
+        merge_face_parts(key, face_obj, log, repaint=repaint)
+        add_face_outline(face_obj, entry.get("outline", 0.0022) * 0.8, log)
     if hidden_skin is not None:
         wardrobe.strip_skin(body, hidden_skin)       # the skin under the clothes (nothing left to poke through)
     tailor_fit = bool(entry.get("outfit")) and not entry.get("wear")
@@ -588,6 +805,7 @@ def build_model(cid, entry, key_name, log=print):
     from . import shading
     shading.face_normals(mesh, arm, log)
     shading.hair_normals(mesh, arm, log)
+    shading.neck_shadow(mesh, arm, log)
     restore_morphs(mesh, log)
     if tailor_fit:
         # final check on exactly what is exported: covered vertices still breaking through follow their cloth

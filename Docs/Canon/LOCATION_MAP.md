@@ -50,7 +50,7 @@
 | `obelisk_boys_front` | Obelisk Blue boys - front | Obelisk Blue Boys' Dorm Exterior | `obelisk_boys` | existing | (-50000, -44000, 3413.5) | `obelisk_front_gate` | — |
 | `obelisk_dining` | Obelisk Blue boys - dining | Obelisk Dining Room | `obelisk_boys` | needs_interior | (-59846.8, -51871.4, 3150) | `obelisk_dining_player` | `obelisk_dining` |
 | `obelisk_common_room` | Obelisk Blue boys - common room | Obelisk Common Room | `obelisk_boys` | merged | (-59846.8, -51871.4, 3150) | `obelisk_dining_player` | → `obelisk_dining` |
-| `obelisk_player_room` | Obelisk Blue boys - your room | Obelisk Room (Player) | `obelisk_boys` | needs_interior | (-57649, -54335.1, 3150) | `obelisk_player_room_bed` | `obelisk_player_room` |
+| `obelisk_player_room` | Obelisk Blue boys - your room | Obelisk Room (Player) | `obelisk_boys` | needs_interior | (-62283.0, -53916.0, 3150) | `obelisk_player_room_bed` | `obelisk_player_room` |
 | `obelisk_girls_front` | Obelisk Blue girls - front | Obelisk Blue Girls' Dorm | `obelisk_girls` | existing | (-12000, -84000, 2945.3) | `obelisk_girls_gate` | — |
 | `harbor` | Harbor | Duel Academy Harbor | `harbor` | existing | (4000, 104000, 420) | `harbor_dock` | — |
 | `ocean_shore` | Ocean / next to ocean | Shoreline / Lake Overlook | `beach` | merged | (82000, 56000, 791.1) | `beach_shore` | → `beach` |
@@ -157,7 +157,7 @@ Every new interior has a paired entrance/exit portal. Exterior coordinates are t
 | `portal_slifer_jaden_room_entrance` | `slifer_jaden_room` | (-106800, 24505, 3300) | 180 | (330000, 329975, -29900) | 90 | `portal_slifer_jaden_room_exit` | met_jaden |
 | `portal_ra_player_room_entrance` | `ra_player_room` | (-68013.6, 65835.6, 2425) | -130 | (360000, 299975, -29900) | 90 | `portal_ra_player_room_exit` | dorm_ra |
 | `portal_obelisk_dining_entrance` | `obelisk_dining` | (-59846.8, -51871.4, 3150) | 140 | (390000, 299800, -29900) | 90 | `portal_obelisk_dining_exit` | dorm_obelisk |
-| `portal_obelisk_player_room_entrance` | `obelisk_player_room` | (-57649, -54335.1, 3150) | 140 | (390000, 319950, -29900) | 90 | `portal_obelisk_player_room_exit` | dorm_obelisk |
+| `portal_obelisk_player_room_entrance` | `obelisk_player_room` | (-62283.0, -53916.0, 3150) | 140 | (390000, 319950, -29900) | 90 | `portal_obelisk_player_room_exit` | dorm_obelisk |
 
 Lock flags are data hooks for A02/A03. Until `ADAInteriorPortal::FlagQuery` is bound, the portals are configured with `fail_closed: false`, so a missing flag service does not seal the level during development.
 

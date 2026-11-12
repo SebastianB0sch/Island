@@ -108,14 +108,27 @@ def hair_normals(obj, arm=None, log=print, blend=HAIR_BLEND, sigma=HAIR_SIGMA):
     e /= np.maximum(np.linalg.norm(e, axis=1, keepdims=True), 1e-9)
     # strand normals turned outwards, then averaged in space (the shape of the hair mass)
     out = np.where((np.einsum("ij,ij->i", own, e) < 0)[:, None], -own, own)
-    tree = cKDTree(p)
+    # (binned into sigma / 2 cells first: all pairs of a dense head of hair within 2 sigma run into the
+    # hundreds of millions)
+    cell = 0.5 * sigma
+    keys = np.floor(p / cell).astype(np.int64)
+    _, inv = np.unique(keys, axis=0, return_inverse=True)
+    inv = inv.ravel()
+    m = int(inv.max()) + 1
+    cnt = np.bincount(inv, minlength=m).astype(np.float64)
+    cen = np.stack([np.bincount(inv, weights=p[:, c], minlength=m) for c in range(3)], axis=1) / cnt[:, None]
+    acc = np.stack([np.bincount(inv, weights=out[:, c], minlength=m) for c in range(3)], axis=1)
+    tree = cKDTree(cen)
     pairs = tree.query_pairs(2.0 * sigma, output_type="ndarray")
-    n = len(p)
-    i = np.concatenate([pairs[:, 0], pairs[:, 1], np.arange(n)])
-    j = np.concatenate([pairs[:, 1], pairs[:, 0], np.arange(n)])
-    wt = np.exp(-(np.linalg.norm(p[i] - p[j], axis=1) / sigma) ** 2)
-    W = csr_matrix((wt, (i, j)), shape=(n, n))
-    mass = W @ out
+    i = np.concatenate([pairs[:, 0], pairs[:, 1], np.arange(m)])
+    j = np.concatenate([pairs[:, 1], pairs[:, 0], np.arange(m)])
+    wt = np.exp(-(np.linalg.norm(cen[i] - cen[j], axis=1) / sigma) ** 2)
+    cells = csr_matrix((wt, (i, j)), shape=(m, m)) @ acc
+    dist, idx = tree.query(p, k=min(4, m))
+    if idx.ndim == 1:
+        dist, idx = dist[:, None], idx[:, None]
+    wq = 1.0 / (dist ** 2 + (0.25 * cell) ** 2)
+    mass = (cells[idx] * wq[..., None]).sum(1)
     mass /= np.maximum(np.linalg.norm(mass, axis=1, keepdims=True), 1e-9)
     vol = mass * 0.55 + e * 0.45
     vol /= np.maximum(np.linalg.norm(vol, axis=1, keepdims=True), 1e-9)
@@ -127,3 +140,62 @@ def hair_normals(obj, arm=None, log=print, blend=HAIR_BLEND, sigma=HAIR_SIGMA):
     me.normals_split_custom_set([tuple(x) for x in normals])
     log(f"  anime: {obj.name}: hair volume normals on {len(loops)} corners")
     return len(loops)
+
+
+# --------------------------------------------------------------------------- neck
+NECK_SHADE = 0.80          # 0 own normals .. 1 fully turned down
+
+
+def neck_shadow(obj, arm, log=print, strength=NECK_SHADE):
+    """The shadow the head throws on the neck, the one piece of ambient occlusion every anime character has:
+    the normals of the neck skin are turned downwards (strongest right under the jaw, fading out towards the
+    collar bones), so the cel ramp puts the neck on the shadow side whatever the light does. Custom normals,
+    exported like the face's."""
+    from .cel import classify
+    me = obj.data
+    groups = {g.name: g.index for g in obj.vertex_groups}
+    if arm is None or "neck_01" not in groups or "head" not in arm.data.bones or "neck_01" not in arm.data.bones:
+        return 0
+    skin = {i for i, m in enumerate(me.materials) if m is not None and classify(m.name) == "skin"}
+    polys = [p for p in me.polygons if p.material_index in skin]
+    if not polys:
+        return 0
+    want = {groups["neck_01"]} | ({groups["head"]} if "head" in groups else set())
+    nv = len(me.vertices)
+    w = np.zeros(nv)
+    for v in me.vertices:
+        for e in v.groups:
+            if e.group in want:
+                w[v.index] += e.weight
+    co = np.empty(nv * 3)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    z0 = float(arm.data.bones["neck_01"].head_local.z)
+    z1 = float(arm.data.bones["head"].head_local.z)
+    nl = len(me.loops)
+    normals = np.empty(nl * 3)
+    me.corner_normals.foreach_get("vector", normals)
+    normals = normals.reshape(-1, 3)
+    loop_vert = np.empty(nl, np.int64)
+    me.loops.foreach_get("vertex_index", loop_vert)
+    loops = np.array([li for p in polys for li in p.loop_indices], np.int64)
+    vi = loop_vert[loops]
+    z = co[vi, 2]
+
+    def smooth(t):
+        t = np.clip(t, 0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+
+    k = strength * smooth((w[vi] - 0.3) / 0.4) * smooth((z - (z0 - 0.005)) / max(0.6 * (z1 - z0), 0.01)) \
+        * (1.0 - smooth((z - (z1 + 0.045)) / 0.02))
+    sel = k > 1e-3
+    if not sel.any():
+        return 0
+    down = np.array([0.0, 0.30, -1.0])
+    down /= np.linalg.norm(down)
+    n = normals[loops[sel]] * (1.0 - k[sel, None]) + down * k[sel, None]
+    n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-9)
+    normals[loops[sel]] = n
+    me.normals_split_custom_set([tuple(x) for x in normals])
+    log(f"  anime: {obj.name}: neck shadow normals on {int(sel.sum())} corners")
+    return int(sel.sum())

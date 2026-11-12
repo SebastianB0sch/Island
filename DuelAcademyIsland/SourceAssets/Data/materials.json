@@ -6384,6 +6384,734 @@
   "strength": 1.0,
   "opacity": 1.0
  },
+ "MT_Int_Boots_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rubber_boots_dirty",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Boots/T_Int_Boots_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Boots_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rubber_boots",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Boots/T_Int_Boots_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_TallSideTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "side_table_tall_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_TallSideTable/T_Int_TallSideTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WallSconce_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "industrial_wall_sconce",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WallSconce/T_Int_WallSconce_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WallSconce_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "industrial_wall_sconce_bulb",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WallSconce/T_Int_WallSconce_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rowboat_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material",
+  "base": "ThirdParty/Rowboat/T_Rowboat_0_BC",
+  "normal": "ThirdParty/Rowboat/T_Rowboat_0_N",
+  "orm": "ThirdParty/Rowboat/T_Rowboat_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Buoy_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "buoy",
+  "base": "ThirdParty/Buoy/T_Buoy_0_BC",
+  "normal": "ThirdParty/Buoy/T_Buoy_0_N",
+  "orm": "ThirdParty/Buoy/T_Buoy_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Container_Blue_0": {
+  "kind": "pbr",
+  "color": [
+   0.12,
+   0.32,
+   0.72
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ContainerLow",
+  "base": "ThirdParty/Container_Blue/T_Container_Blue_0_BC",
+  "normal": "ThirdParty/Container_Blue/T_Container_Blue_0_N",
+  "orm": "ThirdParty/Container_Blue/T_Container_Blue_0_ORM",
+  "rough_channel": "R",
+  "color_linear": [
+   0.01341174889765847,
+   0.0835351274258047,
+   0.47699978456654196
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Container_Red_0": {
+  "kind": "pbr",
+  "color": [
+   0.78,
+   0.16,
+   0.12
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ContainerLow",
+  "base": "ThirdParty/Container_Red/T_Container_Red_0_BC",
+  "normal": "ThirdParty/Container_Red/T_Container_Red_0_N",
+  "orm": "ThirdParty/Container_Red/T_Container_Red_0_ORM",
+  "rough_channel": "R",
+  "color_linear": [
+   0.5704815954749093,
+   0.021980947079887205,
+   0.01341174889765847
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Container_Yellow_0": {
+  "kind": "pbr",
+  "color": [
+   0.92,
+   0.72,
+   0.12
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ContainerLow",
+  "base": "ThirdParty/Container_Yellow/T_Container_Yellow_0_BC",
+  "normal": "ThirdParty/Container_Yellow/T_Container_Yellow_0_N",
+  "orm": "ThirdParty/Container_Yellow/T_Container_Yellow_0_ORM",
+  "rough_channel": "R",
+  "color_linear": [
+   0.8275708303626798,
+   0.47699978456654196,
+   0.01341174889765847
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FishingBoat_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 1.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lambert3SG",
+  "base": "ThirdParty/FishingBoat/T_FishingBoat_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Dustpan_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "dustpan",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Dustpan/T_Int_Dustpan_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Lifebuoy_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lifebuoy",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Lifebuoy/T_Int_Lifebuoy_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Magnifier_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "magnifying_glass_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Magnifier/T_Int_Magnifier_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Magnifier_1": {
+  "kind": "toon",
+  "color": [
+   0.8631654204406407,
+   0.906331789156457,
+   0.9030788877305614
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "magnifying_glass_01_lense",
+  "fill": 0.35,
+  "color_linear": [
+   0.7164804339408875,
+   0.8000000715255737,
+   0.7935186624526978
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PlasticChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "plastic_monobloc_chair_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PlasticChair/T_Int_PlasticChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_DeadTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_willow",
+  "base": "ThirdParty/DeadTree_A/T_DeadTree_A_0_BC",
+  "normal": "ThirdParty/DeadTree_A/T_DeadTree_A_0_N",
+  "orm": "ThirdParty/DeadTree_A/T_DeadTree_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Dartboard_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "dartboard",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Dartboard/T_Int_Dartboard_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_DiningTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "dining_table",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_DiningTable/T_Int_DiningTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_Old_0": {
+  "kind": "pbr",
+  "color": [
+   0.72,
+   0.56,
+   0.45
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "LanternPost_Mat",
+  "base": "ThirdParty/LampPost_Old/T_LampPost_Old_0_BC",
+  "normal": "ThirdParty/LampPost_Old/T_LampPost_Old_0_N",
+  "orm": "ThirdParty/LampPost_Old/T_LampPost_Old_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   0.47699978456654196,
+   0.27383841647314605,
+   0.17064493581555268
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Side_Support",
+  "base": "ThirdParty/BeachChair/T_BeachChair_0_BC",
+  "normal": "ThirdParty/BeachChair/T_BeachChair_0_N",
+  "orm": "ThirdParty/BeachChair/T_BeachChair_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Cloth",
+  "base": "ThirdParty/BeachChair/T_BeachChair_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_2": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Side_rail",
+  "base": "ThirdParty/BeachChair/T_BeachChair_2_BC",
+  "normal": "ThirdParty/BeachChair/T_BeachChair_2_N",
+  "orm": "ThirdParty/BeachChair/T_BeachChair_2_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_3": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.6000000238418579,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Support",
+  "base": "ThirdParty/BeachChair/T_BeachChair_3_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_4": {
+  "kind": "pbr",
+  "color": [
+   0.906331789156457,
+   0.6582362817712929,
+   0.14984373191093786
+  ],
+  "rough": 1.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Fittings",
+  "color_linear": [
+   0.8000000715255737,
+   0.3907997906208038,
+   0.01957079768180847
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_5": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Hemi",
+  "base": "ThirdParty/BeachChair/T_BeachChair_5_BC",
+  "normal": "ThirdParty/BeachChair/T_BeachChair_5_N",
+  "orm": "ThirdParty/BeachChair/T_BeachChair_5_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PineTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_pine",
+  "base": "ThirdParty/PineTree_A/T_PineTree_A_0_BC",
+  "normal": "ThirdParty/PineTree_A/T_PineTree_A_0_N",
+  "orm": "ThirdParty/PineTree_A/T_PineTree_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PineTree_A_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_pine",
+  "base": "ThirdParty/PineTree_A/T_PineTree_A_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_C_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rock_face_02",
+  "base": "ThirdParty/Rock_C/T_Rock_C_0_BC",
+  "normal": "ThirdParty/Rock_C/T_Rock_C_0_N",
+  "orm": "ThirdParty/Rock_C/T_Rock_C_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_D_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "coast_rocks_05",
+  "base": "ThirdParty/Rock_D/T_Rock_D_0_BC",
+  "normal": "ThirdParty/Rock_D/T_Rock_D_0_N",
+  "orm": "ThirdParty/Rock_D/T_Rock_D_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_VolcanicRock_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.003",
+  "base": "ThirdParty/VolcanicRock_A/T_VolcanicRock_A_0_BC",
+  "normal": "ThirdParty/VolcanicRock_A/T_VolcanicRock_A_0_N",
+  "orm": "ThirdParty/VolcanicRock_A/T_VolcanicRock_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Driftwood_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "dead_tree_trunk_02",
+  "base": "ThirdParty/Driftwood_A/T_Driftwood_A_0_BC",
+  "normal": "ThirdParty/Driftwood_A/T_Driftwood_A_0_N",
+  "orm": "ThirdParty/Driftwood_A/T_Driftwood_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
  "M_BridgeStone": {
   "kind": "opaque",
   "color": [
@@ -6496,6 +7224,5985 @@
   ],
   "metallic": 0.0,
   "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.7999999523162842,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Coconut",
+  "base": "ThirdParty/PalmTree_A/T_PalmTree_A_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_A_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8418861031532288,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/PalmTree_A/T_PalmTree_A_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_A_2": {
+  "kind": "pbr",
+  "color": [
+   0.86,
+   0.74,
+   0.6
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "base": "ThirdParty/PalmTree_A/T_PalmTree_A_2_BC",
+  "color_linear": [
+   0.7105664902244221,
+   0.5070785101492276,
+   0.31854677812509186
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Coconut",
+  "base": "ThirdParty/PalmTree_B/T_PalmTree_B_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_B_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8418861031532288,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/PalmTree_B/T_PalmTree_B_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_B_2": {
+  "kind": "pbr",
+  "color": [
+   0.86,
+   0.74,
+   0.6
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "base": "ThirdParty/PalmTree_B/T_PalmTree_B_2_BC",
+  "color_linear": [
+   0.7105664902244221,
+   0.5070785101492276,
+   0.31854677812509186
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_oak",
+  "base": "ThirdParty/BroadTree_A/T_BroadTree_A_0_BC",
+  "normal": "ThirdParty/BroadTree_A/T_BroadTree_A_0_N",
+  "orm": "ThirdParty/BroadTree_A/T_BroadTree_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_A_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_ash",
+  "base": "ThirdParty/BroadTree_A/T_BroadTree_A_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_oak",
+  "base": "ThirdParty/BroadTree_B/T_BroadTree_B_0_BC",
+  "normal": "ThirdParty/BroadTree_B/T_BroadTree_B_0_N",
+  "orm": "ThirdParty/BroadTree_B/T_BroadTree_B_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_B_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_ash",
+  "base": "ThirdParty/BroadTree_B/T_BroadTree_B_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_C_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "base": "ThirdParty/BroadTree_C/T_BroadTree_C_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_C_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8418861031532288,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/BroadTree_C/T_BroadTree_C_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bush_A_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "anthurium_botany_01",
+  "base": "ThirdParty/Bush_A/T_Bush_A_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/Bush_A/T_Bush_A_0_N",
+  "orm": "ThirdParty/Bush_A/T_Bush_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bush_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_oak",
+  "base": "ThirdParty/Bush_B/T_Bush_B_0_BC",
+  "normal": "ThirdParty/Bush_B/T_Bush_B_0_N",
+  "orm": "ThirdParty/Bush_B/T_Bush_B_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bush_B_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_ash",
+  "base": "ThirdParty/Bush_B/T_Bush_B_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Red_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/FlowerBush_Red/T_FlowerBush_Red_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Red_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Rose",
+  "base": "ThirdParty/FlowerBush_Red/T_FlowerBush_Red_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Red_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.4549014738866293,
+   0.35294162087433983
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.17464700341224668,
+   0.10224200040102006
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Yellow_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/FlowerBush_Yellow/T_FlowerBush_Yellow_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Yellow_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Rose",
+  "base": "ThirdParty/FlowerBush_Yellow/T_FlowerBush_Yellow_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Yellow_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.4549014738866293,
+   0.35294162087433983
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.17464700341224668,
+   0.10224200040102006
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "PinkFlowers",
+  "base": "ThirdParty/FlowerBush_Blue/T_FlowerBush_Blue_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_1": {
+  "kind": "pbr",
+  "color": [
+   0.3001515245491554,
+   0.5166603507852228,
+   0.3149143996173181
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "color_linear": [
+   0.07331400364637375,
+   0.22978700697422022,
+   0.08084200322628021
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.537254632836091,
+   0.2784313329477071
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.2501580119132995,
+   0.06300999969244005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_3": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "HydrangeaLeaf",
+  "base": "ThirdParty/FlowerBush_Blue/T_FlowerBush_Blue_3_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "PinkFlowers",
+  "base": "ThirdParty/FlowerBush_White/T_FlowerBush_White_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_1": {
+  "kind": "pbr",
+  "color": [
+   0.3001515245491554,
+   0.5166603507852228,
+   0.3149143996173181
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "color_linear": [
+   0.07331400364637375,
+   0.22978700697422022,
+   0.08084200322628021
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.537254632836091,
+   0.2784313329477071
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.2501580119132995,
+   0.06300999969244005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_3": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "HydrangeaLeaf",
+  "base": "ThirdParty/FlowerBush_White/T_FlowerBush_White_3_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Fern_A_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fern_02",
+  "base": "ThirdParty/Fern_A/T_Fern_A_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/Fern_A/T_Fern_A_0_N",
+  "orm": "ThirdParty/Fern_A/T_Fern_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_GrassClump_A_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "grass_medium_01",
+  "base": "ThirdParty/GrassClump_A/T_GrassClump_A_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/GrassClump_A/T_GrassClump_A_0_N",
+  "orm": "ThirdParty/GrassClump_A/T_GrassClump_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "boulder_01",
+  "base": "ThirdParty/Rock_A/T_Rock_A_0_BC",
+  "normal": "ThirdParty/Rock_A/T_Rock_A_0_N",
+  "orm": "ThirdParty/Rock_A/T_Rock_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rock_09",
+  "base": "ThirdParty/Rock_B/T_Rock_B_0_BC",
+  "normal": "ThirdParty/Rock_B/T_Rock_B_0_N",
+  "orm": "ThirdParty/Rock_B/T_Rock_B_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_CliffRock_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "mountainside",
+  "base": "ThirdParty/CliffRock_A/T_CliffRock_A_0_BC",
+  "normal": "ThirdParty/CliffRock_A/T_CliffRock_A_0_N",
+  "orm": "ThirdParty/CliffRock_A/T_CliffRock_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "street_lamp_01",
+  "base": "ThirdParty/LampPost/T_LampPost_0_BC",
+  "normal": "ThirdParty/LampPost/T_LampPost_0_N",
+  "orm": "ThirdParty/LampPost/T_LampPost_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "street_lamp_01_glass",
+  "base": "ThirdParty/LampPost/T_LampPost_1_BC",
+  "masked": true,
+  "normal": "ThirdParty/LampPost/T_LampPost_1_N",
+  "orm": "ThirdParty/LampPost/T_LampPost_1_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_2": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "street_lamp_01_bulb",
+  "base": "ThirdParty/LampPost/T_LampPost_2_BC",
+  "normal": "ThirdParty/LampPost/T_LampPost_2_N",
+  "orm": "ThirdParty/LampPost/T_LampPost_2_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bench_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "M_bench_wood",
+  "base": "ThirdParty/Bench/T_Bench_0_BC",
+  "normal": "ThirdParty/Bench/T_Bench_0_N",
+  "orm": "ThirdParty/Bench/T_Bench_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Signpost_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.002",
+  "base": "ThirdParty/Signpost/T_Signpost_0_BC",
+  "normal": "ThirdParty/Signpost/T_Signpost_0_N",
+  "orm": "ThirdParty/Signpost/T_Signpost_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Signpost_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.005",
+  "base": "ThirdParty/Signpost/T_Signpost_1_BC",
+  "masked": true,
+  "orm": "ThirdParty/Signpost/T_Signpost_1_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_TrashBin_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "metal_trash_can",
+  "base": "ThirdParty/TrashBin/T_TrashBin_0_BC",
+  "normal": "ThirdParty/TrashBin/T_TrashBin_0_N",
+  "orm": "ThirdParty/TrashBin/T_TrashBin_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Fence_Wood_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "material",
+  "base": "ThirdParty/Fence_Wood/T_Fence_Wood_0_BC",
+  "normal": "ThirdParty/Fence_Wood/T_Fence_Wood_0_N",
+  "orm": "ThirdParty/Fence_Wood/T_Fence_Wood_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Fence_Iron_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "IronFence",
+  "base": "ThirdParty/Fence_Iron/T_Fence_Iron_0_BC",
+  "normal": "ThirdParty/Fence_Iron/T_Fence_Iron_0_N",
+  "orm": "ThirdParty/Fence_Iron/T_Fence_Iron_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Crate_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Scene_-_Root",
+  "base": "ThirdParty/Crate/T_Crate_0_BC",
+  "normal": "ThirdParty/Crate/T_Crate_0_N",
+  "orm": "ThirdParty/Crate/T_Crate_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Barrel_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Barrel_01",
+  "base": "ThirdParty/Barrel/T_Barrel_0_BC",
+  "normal": "ThirdParty/Barrel/T_Barrel_0_N",
+  "orm": "ThirdParty/Barrel/T_Barrel_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_0": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.11075758188962936,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "stand",
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_1": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.13500000536441803,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "screw",
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_2": {
+  "kind": "pbr",
+  "color": [
+   0.18406681046398857,
+   0.3140098931576252,
+   0.9063317593127924
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade1",
+  "color_linear": [
+   0.028355700895190235,
+   0.08036839962005617,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_3": {
+  "kind": "pbr",
+  "color": [
+   0.19882323415303244,
+   0.9063317593127924,
+   0.17562115349480917
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade2",
+  "color_linear": [
+   0.032739300280809396,
+   0.8000000119209288,
+   0.026010699570178986
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_4": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.28758518195704935,
+   0.34785684119306537
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade3",
+  "color_linear": [
+   0.8000000119209288,
+   0.06724169850349426,
+   0.09921009838581084
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_5": {
+  "kind": "pbr",
+  "color": [
+   0.2200493416627608,
+   0.9063317593127924,
+   0.8460798030432162
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade4",
+  "color_linear": [
+   0.0396989993751049,
+   0.8000000119209288,
+   0.6848980188369751
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_6": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.15308005641303873,
+   0.8099037218788577
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade5",
+  "color_linear": [
+   0.8000000119209288,
+   0.020321099087595943,
+   0.6207500100135802
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_7": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.7983053699117362,
+   0.34323859068152984
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade6",
+  "color_linear": [
+   0.8000000119209288,
+   0.6009590029716493,
+   0.09650240093469618
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_StoneLantern_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "RootNode",
+  "base": "ThirdParty/StoneLantern/T_StoneLantern_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/StoneLantern/T_StoneLantern_0_N",
+  "orm": "ThirdParty/StoneLantern/T_StoneLantern_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PicnicTable_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_picnic_table_bottom",
+  "base": "ThirdParty/PicnicTable/T_PicnicTable_0_BC",
+  "normal": "ThirdParty/PicnicTable/T_PicnicTable_0_N",
+  "orm": "ThirdParty/PicnicTable/T_PicnicTable_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PicnicTable_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_picnic_table_table",
+  "base": "ThirdParty/PicnicTable/T_PicnicTable_1_BC",
+  "normal": "ThirdParty/PicnicTable/T_PicnicTable_1_N",
+  "orm": "ThirdParty/PicnicTable/T_PicnicTable_1_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Stump_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "tree_stump_01",
+  "base": "ThirdParty/Stump_A/T_Stump_A_0_BC",
+  "normal": "ThirdParty/Stump_A/T_Stump_A_0_N",
+  "orm": "ThirdParty/Stump_A/T_Stump_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Pebbles_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "stone_01",
+  "base": "ThirdParty/Pebbles_A/T_Pebbles_A_0_BC",
+  "normal": "ThirdParty/Pebbles_A/T_Pebbles_A_0_N",
+  "orm": "ThirdParty/Pebbles_A/T_Pebbles_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SchoolDesk_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "SchoolDesk_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SchoolDesk/T_Int_SchoolDesk_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SchoolChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "SchoolChair_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SchoolChair/T_Int_SchoolChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Armchair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Armchair_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Armchair/T_Int_Armchair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Sofa_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Sofa_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Sofa/T_Int_Sofa_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SofaB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "sofa_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SofaB/T_Int_SofaB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WoodChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "painted_wooden_chair_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WoodChair/T_Int_WoodChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_DiningChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "dining_chair_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_DiningChair/T_Int_DiningChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_BarStool_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Bar Chair",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_BarStool/T_Int_BarStool_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Ottoman_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Ottoman_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Ottoman/T_Int_Ottoman_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Stool_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chinese_stool",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Stool/T_Int_Stool_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_GreenChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "GreenChair_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_GreenChair/T_Int_GreenChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OfficeChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_arm_chair_01_legs",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OfficeChair/T_Int_OfficeChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OfficeChair_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_arm_chair_01_pillow",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OfficeChair/T_Int_OfficeChair_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Bench_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "painted_wooden_bench",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Bench/T_Int_Bench_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Table_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "WoodenTable_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Table/T_Int_Table_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_RoundTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "round_wooden_table_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_RoundTable/T_Int_RoundTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CoffeeTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "coffee_table_round_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CoffeeTable/T_Int_CoffeeTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OfficeDesk_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "metal_office_desk",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OfficeDesk/T_Int_OfficeDesk_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_LowTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chinese_tea_table",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_LowTable/T_Int_LowTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SideTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "side_table_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SideTable/T_Int_SideTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Console_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ClassicConsole_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Console/T_Int_Console_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_GrandBed_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "GothicBed_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_GrandBed/T_Int_GrandBed_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Nightstand_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ClassicNightstand_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Nightstand/T_Int_Nightstand_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_NightstandB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "painted_wooden_nightstand",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_NightstandB/T_Int_NightstandB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Bookshelf_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_bookshelf_worn",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Bookshelf/T_Int_Bookshelf_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Shelves_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "painted_wooden_shelves",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Shelves/T_Int_Shelves_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SteelShelves_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "steel_frame_shelves_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SteelShelves/T_Int_SteelShelves_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Cabinet_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "painted_wooden_cabinet",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Cabinet/T_Int_Cabinet_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Wardrobe_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "GothicCabinet_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Wardrobe/T_Int_Wardrobe_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_DisplayShelves_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_display_shelves_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_DisplayShelves/T_Int_DisplayShelves_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chandelier_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Chandelier_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Chandelier/T_Int_Chandelier_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chandelier_1": {
+  "kind": "toon",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.27272725105285645,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Chandelier_02_bulb",
+  "fill": 0.35,
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CeilingLamp_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_ceiling_lamp_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CeilingLamp/T_Int_CeilingLamp_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CeilingLamp_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_ceiling_lamp_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CeilingLamp/T_Int_CeilingLamp_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CeilingLamp_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_ceiling_globe",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CeilingLamp/T_Int_CeilingLamp_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_IndustrialLamp_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_industrial_lamp",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_IndustrialLamp/T_Int_IndustrialLamp_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_IndustrialLamp_1": {
+  "kind": "toon",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.10000000149011612,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_industrial_lamp_glass",
+  "fill": 0.35,
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CeilingFan_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ceiling_fan",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CeilingFan/T_Int_CeilingFan_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_DeskLamp_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "desk_lamp_arm_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_DeskLamp/T_Int_DeskLamp_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_DeskLamp_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "desk_lamp_arm_01_light",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_DeskLamp/T_Int_DeskLamp_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OilLamp_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_oil_lamp",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OilLamp/T_Int_OilLamp_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OilLamp_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_oil_lamp_flame",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OilLamp/T_Int_OilLamp_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OilLamp_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_oil_lamp_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OilLamp/T_Int_OilLamp_2_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PottedPlant_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "potted_plant_04",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PottedPlant/T_Int_PottedPlant_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PottedPlantB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "potted_plant_02_pot",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PottedPlantB/T_Int_PottedPlantB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PottedPlantB_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "potted_plant_02_leaves",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PottedPlantB/T_Int_PottedPlantB_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Painting_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fancy_picture_frame_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Painting/T_Int_Painting_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Painting_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fancy_picture_frame_01_canvas",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Painting/T_Int_Painting_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Frame_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_picture_frame_02_artwork",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Frame/T_Int_Frame_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Frame_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_picture_frame_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Frame/T_Int_Frame_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Frame_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_picture_frame_02_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Frame/T_Int_Frame_2_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Mirror_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ornate_mirror_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Mirror/T_Int_Mirror_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WallClock_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wall_clock",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WallClock/T_Int_WallClock_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WallClock_1": {
+  "kind": "toon",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wall_clock_glass",
+  "fill": 0.35,
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_GrandfatherClock_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_grandfather_clock_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_GrandfatherClock/T_Int_GrandfatherClock_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_GrandfatherClock_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_grandfather_clock_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_GrandfatherClock/T_Int_GrandfatherClock_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chalkboard_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_chalkboard_01_frame",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Chalkboard/T_Int_Chalkboard_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chalkboard_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_chalkboard_01_board",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Chalkboard/T_Int_Chalkboard_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_TV_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Television_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_TV/T_Int_TV_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Register_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "CashRegister_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Register/T_Int_Register_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Register_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "CashRegister_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Register/T_Int_Register_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Bust_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "marble_bust_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Bust/T_Int_Bust_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Books_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "book_encyclopedia_set_01_cover",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Books/T_Int_Books_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Books_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "book_encyclopedia_set_01_paper",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Books/T_Int_Books_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Box_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "cardboard_box_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Box/T_Int_Box_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Radio_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_radio_transceiver",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Radio/T_Int_Radio_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Radio_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_radio_transceiver_accessories",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Radio/T_Int_Radio_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Extinguisher_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "korean_fire_extinguisher_01_body",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Extinguisher/T_Int_Extinguisher_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Extinguisher_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "korean_fire_extinguisher_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Extinguisher/T_Int_Extinguisher_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Extinguisher_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "korean_fire_extinguisher_01_paper",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Extinguisher/T_Int_Extinguisher_2_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WetFloor_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "WetFloorSign_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WetFloor/T_Int_WetFloor_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Basket_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wicker_basket_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Basket/T_Int_Basket_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Bucket_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_bucket_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Bucket/T_Int_Bucket_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_FoldingScreen_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chinese_screen_panels",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_FoldingScreen/T_Int_FoldingScreen_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Pillows_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "throw_pillows_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Pillows/T_Int_Pillows_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Suitcase_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_suitcase_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Suitcase/T_Int_Suitcase_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Suitcase_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_suitcase_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Suitcase/T_Int_Suitcase_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Stove_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "electric_stove",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Stove/T_Int_Stove_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Stove_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "electric_stove_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Stove/T_Int_Stove_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Candelabra_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_candleholders_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Candelabra/T_Int_Candelabra_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Candelabra_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 1.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_candleholders_flame",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Candelabra/T_Int_Candelabra_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Candelabra_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_candleholders_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Candelabra/T_Int_Candelabra_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Candelabra_3": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_candleholders_candles",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Candelabra/T_Int_Candelabra_3_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Candelabra_4": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_candleholders_03",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Candelabra/T_Int_Candelabra_4_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_OldBed_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "old_bed_frame",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_OldBed/T_Int_OldBed_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_RockingChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Rockingchair_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_RockingChair/T_Int_RockingChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ProjectorScreen_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "projector_screen_frame",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_ProjectorScreen/T_Int_ProjectorScreen_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ProjectorScreen_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "projector_screen",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_ProjectorScreen/T_Int_ProjectorScreen_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_HandTruck_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hand_truck",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_HandTruck/T_Int_HandTruck_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_RubberDuck_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rubber_duck_toy",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_RubberDuck/T_Int_RubberDuck_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Microwave_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_microwave",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Microwave/T_Int_Microwave_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Microwave_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_microwave_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Microwave/T_Int_Microwave_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Kettle_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_electric_kettle",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Kettle/T_Int_Kettle_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Kettle_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_electric_kettle_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Kettle/T_Int_Kettle_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_TeaSet_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "tea_set_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_TeaSet/T_Int_TeaSet_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Pot_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_pot_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Pot/T_Int_Pot_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_EnamelPot_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "pot_enamel_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_EnamelPot/T_Int_EnamelPot_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Jug_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "jug_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Jug/T_Int_Jug_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Bowl_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_bowl_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Bowl/T_Int_Bowl_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CuttingBoard_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_cutting_board",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CuttingBoard/T_Int_CuttingBoard_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Cake_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "strawberry_chocolate_cake",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Cake/T_Int_Cake_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Apple_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "food_apple_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Apple/T_Int_Apple_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Bananas_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.008",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Bananas/T_Int_Bananas_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Lemon_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lemon",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Lemon/T_Int_Lemon_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Croissant_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "croissant",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Croissant/T_Int_Croissant_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Goblets_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_goblets_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Goblets/T_Int_Goblets_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Goblets_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_goblets_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Goblets/T_Int_Goblets_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Goblets_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_goblets_03",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Goblets/T_Int_Goblets_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Binder_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "binder_notebook",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Binder/T_Int_Binder_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Clipboard_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "clipboard",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Clipboard/T_Int_Clipboard_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Notepads_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "office_notepads",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Notepads/T_Int_Notepads_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Stationery_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "stationery_supplies",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Stationery/T_Int_Stationery_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Laptop_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "classic_laptop",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Laptop/T_Int_Laptop_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Laptop_1": {
+  "kind": "toon",
+  "color": [
+   0.14623907685041906,
+   0.14623907685041906,
+   0.14623907685041906
+  ],
+  "rough": 0.6000000238418579,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "classic_laptop_screen",
+  "fill": 0.35,
+  "color_linear": [
+   0.018754420801997185,
+   0.018754420801997185,
+   0.018754420801997185
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Stapler_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_stapler",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Stapler/T_Int_Stapler_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_AlarmClock_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "alarm_clock_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_AlarmClock/T_Int_AlarmClock_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_AlarmClock_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "alarm_clock_01_Glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_AlarmClock/T_Int_AlarmClock_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_FireAlarm_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fire_alarm",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_FireAlarm/T_Int_FireAlarm_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SecurityCam_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "security_camera_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SecurityCam/T_Int_SecurityCam_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SecurityCam_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "security_camera_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SecurityCam/T_Int_SecurityCam_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_MantelClock_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "mantel_clock_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_MantelClock/T_Int_MantelClock_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_MantelClock_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "mantel_clock_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_MantelClock/T_Int_MantelClock_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Camera_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Camera_01_lens_body",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Camera/T_Int_Camera_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Camera_1": {
+  "kind": "toon",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Camera_01_lens",
+  "fill": 0.35,
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Camera_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Camera_01_body",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Camera/T_Int_Camera_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Camera_3": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Camera_01_strap",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Camera/T_Int_Camera_3_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Gamepad_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "gamepad",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Gamepad/T_Int_Gamepad_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_TVB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "television_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_TVB/T_Int_TVB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Postcards_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "postcard_set_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Postcards/T_Int_Postcards_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chess_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chess_set_board",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Chess/T_Int_Chess_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chess_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chess_set_pieces_black",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Chess/T_Int_Chess_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Chess_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chess_set_pieces_white",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Chess/T_Int_Chess_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Ukulele_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Ukulele_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Ukulele/T_Int_Ukulele_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Ball_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "football",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Ball/T_Int_Ball_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_BaseballBat_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "baseball_bat",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_BaseballBat/T_Int_BaseballBat_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PhotoFrame_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_picture_frame_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PhotoFrame/T_Int_PhotoFrame_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PhotoFrame_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_picture_frame_01_artwork",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PhotoFrame/T_Int_PhotoFrame_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PhotoFrame_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_picture_frame_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PhotoFrame/T_Int_PhotoFrame_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PhotoFrameB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_picture_frame_02_artwork",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PhotoFrameB/T_Int_PhotoFrameB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PhotoFrameB_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_picture_frame_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PhotoFrameB/T_Int_PhotoFrameB_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PhotoFrameB_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "standing_picture_frame_02_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PhotoFrameB/T_Int_PhotoFrameB_2_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PaintingB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fancy_picture_frame_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PaintingB/T_Int_PaintingB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PaintingB_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fancy_picture_frame_02_canvas",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PaintingB/T_Int_PaintingB_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_FrameC_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_picture_frame_03",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_FrameC/T_Int_FrameC_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_FrameC_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_picture_frame_03_artwork",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_FrameC/T_Int_FrameC_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_FrameC_2": {
+  "kind": "toon",
+  "color": [
+   0.06739117774891656,
+   0.06739117774891656,
+   0.06739117774891656
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "hanging_picture_frame_03_glass",
+  "fill": 0.35,
+  "color_linear": [
+   0.0056858365423977375,
+   0.0056858365423977375,
+   0.0056858365423977375
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Binoculars_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "binoculars",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Binoculars/T_Int_Binoculars_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Binoculars_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "binoculars_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Binoculars/T_Int_Binoculars_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Compass_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "seadogs_compass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Compass/T_Int_Compass_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WhaleStatue_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "bronze_whale_statue",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WhaleStatue/T_Int_WhaleStatue_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CatStatue_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "concrete_cat_statue",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CatStatue/T_Int_CatStatue_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_HorseStatue_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "horse_statue_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_HorseStatue/T_Int_HorseStatue_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_HorseStatue_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "horse_statue_01_base",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_HorseStatue/T_Int_HorseStatue_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_VaseA_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "antique_ceramic_vase_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_VaseA/T_Int_VaseA_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_VaseB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ceramic_vase_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_VaseB/T_Int_VaseB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_VaseC_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "brass_vase_001",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_VaseC/T_Int_VaseC_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Shell_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lambis_shell",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Shell/T_Int_Shell_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Candlestick_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_candlestick",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Candlestick/T_Int_Candlestick_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Broom_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "plastic_broom",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Broom/T_Int_Broom_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Broom_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "plastic_broom_bristles",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Broom/T_Int_Broom_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_TrashBag_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "trashbag",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_TrashBag/T_Int_TrashBag_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_LifeJacket_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "life_jacket",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_LifeJacket/T_Int_LifeJacket_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Hat_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fishermans_hat",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Hat/T_Int_Hat_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Drawers_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "drawer_cabinet",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Drawers/T_Int_Drawers_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Vitrine_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_cabinet_01_a",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Vitrine/T_Int_Vitrine_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Vitrine_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_cabinet_01_b",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Vitrine/T_Int_Vitrine_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Vitrine_2": {
+  "kind": "toon",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_cabinet_01_glass",
+  "fill": 0.35,
+  "masked": true,
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_MediaCabinet_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_wooden_cabinet",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_MediaCabinet/T_Int_MediaCabinet_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ChineseCabinet_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chinese_cabinet",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_ChineseCabinet/T_Int_ChineseCabinet_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Dresser_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_wooden_drawer_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Dresser/T_Int_Dresser_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WoodSofa_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "painted_wooden_sofa",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WoodSofa/T_Int_WoodSofa_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_LoungeChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "mid_century_lounge_chair",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_LoungeChair/T_Int_LoungeChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ChineseArmchair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chinese_armchair",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_ChineseArmchair/T_Int_ChineseArmchair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_FoldingStool_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "folding_wooden_stool",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_FoldingStool/T_Int_FoldingStool_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_MetalStool_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "metal_stool_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_MetalStool/T_Int_MetalStool_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_RoundTableB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "round_wooden_table_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_RoundTableB/T_Int_RoundTableB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SmallTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "small_wooden_table_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SmallTable/T_Int_SmallTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CoffeeTableB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "modern_coffee_table_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CoffeeTableB/T_Int_CoffeeTableB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CafeTable_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "gallinera_table",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CafeTable/T_Int_CafeTable_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CafeChair_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "gallinera_chair",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CafeChair/T_Int_CafeChair_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_DayBed_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "vintage_day_bed",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_DayBed/T_Int_DayBed_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_MetalRack_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "worn_metal_rack",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_MetalRack/T_Int_MetalRack_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ToolCart_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "tool_cart",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_ToolCart/T_Int_ToolCart_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Toolbox_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "metal_toolbox",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Toolbox/T_Int_Toolbox_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Ladder_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_ladder",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Ladder/T_Int_Ladder_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WallLamp_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "industrial_wall_lamp",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WallLamp/T_Int_WallLamp_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_WallLamp_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "industrial_wall_lamp_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_WallLamp/T_Int_WallLamp_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ChandelierB_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "basecolor_classic_chandelier_1",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_ChandelierB/T_Int_ChandelierB_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_ChandelierB_1": {
+  "kind": "toon",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.3227272629737854,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lamps_classic_chandelier_1",
+  "fill": 0.35,
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_LanternLamp_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "chinese_chandelier",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_LanternLamp/T_Int_LanternLamp_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Lantern_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_lantern_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Lantern/T_Int_Lantern_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Lantern_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_lantern_01_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Lantern/T_Int_Lantern_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_CageLight_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "caged_hanging_light",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_CageLight/T_Int_CageLight_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PottedPlantC_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "potted_plant_01_leaves",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PottedPlantC/T_Int_PottedPlantC_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PottedPlantC_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "potted_plant_01_pot",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PottedPlantC/T_Int_PottedPlantC_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_PlanterBox_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "planter_box_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_PlanterBox/T_Int_PlanterBox_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Aircon_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "exterior_aircon_unit_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Aircon/T_Int_Aircon_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Aircon_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "exterior_aircon_unit_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Aircon/T_Int_Aircon_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Aircon_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "exterior_aircon_unit_rusted_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Aircon/T_Int_Aircon_2_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_Aircon_3": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "exterior_aircon_unit_rusted_02",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_Aircon/T_Int_Aircon_3_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_UtilityBox_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "utility_box_01",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_UtilityBox/T_Int_UtilityBox_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SecurityLight_0": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "security_light",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SecurityLight/T_Int_SecurityLight_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SecurityLight_1": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "security_light_bulb",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SecurityLight/T_Int_SecurityLight_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Int_SecurityLight_2": {
+  "kind": "toon",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "security_light_glass",
+  "fill": 0.35,
+  "base": "ThirdParty/Int_SecurityLight/T_Int_SecurityLight_2_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Shirt": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Shirt",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Skin": {
+  "kind": "pbr",
+  "color": [
+   0.6633344740609,
+   0.5418334502192549,
+   0.4000753190457139
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Skin",
+  "color_linear": [
+   0.3975375890731812,
+   0.25482478737831116,
+   0.13292111456394196
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Pants": {
+  "kind": "pbr",
+  "color": [
+   0.2441719643793559,
+   0.2275670424458473,
+   0.2275670424458473
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Pants",
+  "color_linear": [
+   0.04857404157519339,
+   0.04235314950346947,
+   0.04235314950346947
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Eyes": {
+  "kind": "pbr",
+  "color": [
+   0.15305068147032913,
+   0.15305068147032913,
+   0.15305068147032913
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Eyes",
+  "color_linear": [
+   0.02031421475112438,
+   0.02031421475112438,
+   0.02031421475112438
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Socks": {
+  "kind": "pbr",
+  "color": [
+   0.6694089943006795,
+   0.6244500664351115,
+   0.6244500664351115
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Socks",
+  "color_linear": [
+   0.40565356612205505,
+   0.3478341400623321,
+   0.3478341400623321
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Hair": {
+  "kind": "pbr",
+  "color": [
+   0.22594812176040074,
+   0.18274126792350773,
+   0.18568417627112957
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Hair",
+  "color_linear": [
+   0.04177311062812805,
+   0.027979830279946324,
+   0.028818288818001747
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_DuelDisk": {
+  "kind": "opaque",
+  "color": [
+   0.7,
+   0.72,
+   0.76
+  ],
+  "rough": 0.35,
+  "metallic": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.44798841244188325,
+   0.47699978456654196,
+   0.5382355236010181
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_DuelGold": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.72,
+   0.22
+  ],
+  "rough": 0.3,
+  "metallic": 1.0,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.47699978456654196,
+   0.039681909478526005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_DuelGlow": {
+  "kind": "emissive",
+  "color": [
+   0.25,
+   0.85,
+   1.0
+  ],
+  "strength": 12.0,
+  "color_linear": [
+   0.05087608817155679,
+   0.692071056865372,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
   "opacity": 1.0
  }
 }

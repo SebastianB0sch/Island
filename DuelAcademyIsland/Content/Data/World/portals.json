@@ -876,11 +876,11 @@
       "interior_id": "obelisk_player_room",
       "role": "entrance",
       "location_ue": [
-        -57649,
-        -54335.1,
+        -62283.0,
+        -53916.0,
         3150
       ],
-      "yaw": 140.0,
+      "yaw": -140.0,
       "trigger_extent": [
         110,
         110,
@@ -935,11 +935,11 @@
         120
       ],
       "target_location_ue": [
-        -58032,
-        -54013.6,
+        -62666.0,
+        -54237.4,
         3150
       ],
-      "target_yaw": 140.0,
+      "target_yaw": -140.0,
       "target_portal_id": "portal_obelisk_player_room_entrance",
       "auto_trigger": true,
       "interactable": true,

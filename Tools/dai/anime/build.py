@@ -484,7 +484,27 @@ def _cel_nodes(nt, color, p):
     ramp.inputs["From Max"].default_value = p["threshold"] + p["soft"]
     lit = ramp.outputs["Result"]
     shadow = mix_rgb(1.0, color, tuple(p["shadow"]), "MULTIPLY")
+    if p.get("shadow2"):
+        # second step: the core shadow
+        ramp2 = nt.nodes.new("ShaderNodeMapRange")
+        ramp2.interpolation_type = "SMOOTHSTEP"
+        nt.links.new(half, ramp2.inputs["Value"])
+        ramp2.inputs["From Min"].default_value = p["threshold2"] - p["soft"]
+        ramp2.inputs["From Max"].default_value = p["threshold2"] + p["soft"]
+        deep = mix_rgb(1.0, color, tuple(p["shadow2"]), "MULTIPLY")
+        shadow = mix_rgb(ramp2.outputs["Result"], deep, shadow)
     out = mix_rgb(lit, shadow, color)
+    if p.get("terminator"):
+        # a thin saturated band on the shadow side of the edge
+        w = max(0.05, p["soft"] * 1.6)
+        tr = nt.nodes.new("ShaderNodeMapRange")
+        tr.interpolation_type = "SMOOTHSTEP"
+        nt.links.new(half, tr.inputs["Value"])
+        tr.inputs["From Min"].default_value = p["threshold"] - p["soft"] - w
+        tr.inputs["From Max"].default_value = p["threshold"] - p["soft"] * 0.5
+        band = math_node("MULTIPLY", tr.outputs["Result"], math_node("SUBTRACT", None, lit, 1.0))
+        band = math_node("MULTIPLY", band, None, None, p.get("terminator_strength", 0.3))
+        out = mix_rgb(band, out, mix_rgb(1.0, color, tuple(p["terminator"]), "MULTIPLY"))
     if p["rim"] > 0:
         lw = nt.nodes.new("ShaderNodeLayerWeight")
         lw.inputs["Blend"].default_value = 0.35
@@ -495,7 +515,8 @@ def _cel_nodes(nt, color, p):
         rim_ramp.inputs["From Max"].default_value = 0.80
         rim = math_node("MULTIPLY", rim_ramp.outputs["Result"], lit)
         rim = math_node("MULTIPLY", rim, None, None, p["rim"])
-        out = mix_rgb(rim, out, (1.0, 0.98, 0.95), "SCREEN")
+        # the rim takes the surface's own colour (white would bleach dark hair and cloth to grey)
+        out = mix_rgb(rim, out, mix_rgb(0.14, color, (1.0, 0.98, 0.95)), "ADD")
     if p["spec"] > 0:
         # angel ring: an annulus of N.H (half vector between the light and the eye) - on a head of hair that is
         # the glossy arc round the crown; the spiky strands break it into strand-wise streaks
