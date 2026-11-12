@@ -110,7 +110,8 @@ def _fit(wear):
         if kind == "pants":
             if p.get("hem", 0.10) < 0.5:
                 p["ease"] = max(p.get("ease", 0.012), 0.018)
-                p.setdefault("flare", 0.016)
+                p.setdefault("flare", 0.008)
+                p.setdefault("taper", 0.30)
         elif kind == "belt":
             if tops < 2:                             # worn under the jacket
                 p["ease"] = min(p.get("ease", 0.016), 0.013)
@@ -154,13 +155,16 @@ def suit(accent, **kw):
 def sweater(accent, knit=NAVY, pants=CHARCOAL, shirt=WHITE, mark="diamond"):
     """V-neck pullover with striped ribbing over a shirt and tie."""
     rib = shade(knit, v=0.78)
-    return _fit([("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.66, cells=(1, 1))),
+    return _fit([("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.66, cells=(1, 1), detail=dict(placket=dict(w=0.028, buttons=5)))),
                  ("collar", dict(color=shirt, kind="shirt")),
                  ("tie", dict(color=accent, length=0.12)),
                  ("pants", dict(color=pants, ease=0.016)),
                  ("top", dict(color=knit, hem=0.93, ease=0.019, v=0.10, cuff=-0.003, flare=-0.004, sleeve_to=0.645,
                               style=dict(hem=[(0.035, rib), (0.02, accent), (0.03, rib)]),
-                              sleeve_style=dict(hem=[(0.05, rib), (0.025, accent), (0.03, rib)])))] + D._pin(accent, kind=mark))
+                              sleeve_style=dict(hem=[(0.05, rib), (0.025, accent), (0.03, rib)],
+                                                ribs=dict(n=18, v1=0.105, depth=0.30)),
+                              detail=dict(ribs=0.060))),
+                 ("band", dict(color=shirt, side="both", x=0.655, width=0.022, ease=0.010))] + D._pin(accent, kind=mark))
 
 
 def tunic(accent, cloth=WHITE, pants=NAVY, slot="cloth", mark="diamond", piping=None):
@@ -170,7 +174,8 @@ def tunic(accent, cloth=WHITE, pants=NAVY, slot="cloth", mark="diamond", piping=
                  ("pants", dict(color=pants, ease=0.016)),
                  ("top", dict(color=cloth, hem=0.87, ease=0.019, slot=slot, cuff=0.003, flare=0.004,
                               style=dict(hem=[(0.03, piping)], edge=[(0.012, piping)]),
-                              sleeve_style=dict(hem=[(0.06, piping), (0.015, cloth), (0.012, piping)]))),
+                              sleeve_style=dict(hem=[(0.06, piping), (0.015, cloth), (0.012, piping)]),
+                              detail=dict(panels=True, pockets=("flap",), pocket_z=0.935, yoke=True))),
                  ("collar", dict(color=piping, kind="stand", slot=slot)),
                  ("belt", dict(color=shade(pants, v=0.7), z=1.0, ease=0.025, pouch=shade(accent, v=0.85))),
                  ("buttons", dict(color=GOLD, z0=1.08, z1=1.32, n=4, x=0.0, r=0.007))] + D._pin(GOLD, kind=mark))
@@ -200,13 +205,13 @@ def pinafore(accent, cloth=None, blouse=WHITE, legs=WHITE, thigh=0.36, length=0.
     """Puff-sleeved blouse under a sleeveless V-neck bodice and a pleated skirt in one colour."""
     cloth = cloth or shade(accent, v=0.8)
     return _fit([("top", dict(color=blouse, hem=0.985, ease=0.006, sleeves="short", puff=0.012, cells=(1, 1),
-                              sleeve_style=dict(hem=[(0.14, accent)]))),
+                              sleeve_style=dict(hem=[(0.14, accent)]), detail=dict(placket=dict(w=0.028, buttons=5)))),
                  ("collar", dict(color=blouse, kind="shirt")),
                  ("bow", dict(color=accent, size=0.8, z=1.345, knot=GOLD)),
                  ("skirt", dict(color=cloth, length=length, pleats=16, style=dict(hem=[(0.03, WHITE), (0.03, cloth),
                                                                                     (0.02, WHITE)]))),
                  ("top", dict(color=cloth, hem=1.0, ease=0.019, sleeves="none", v=0.15,
-                              style=dict(edge=[(0.014, WHITE)]))),
+                              style=dict(edge=[(0.014, WHITE)]), detail=dict(panels=True))),
                  ("buttons", dict(color=GOLD, z0=1.06, z1=1.14, n=2, x=0.028, r=0.007, double=True)),
                  ("legwear", dict(color=legs, top=thigh, style=dict(top=[(0.05, accent)])))])
 
@@ -351,7 +356,7 @@ WEAR = {
     "alexis": blazer_f(BLUE, jacket=WHITE, skirt=BLUE, thigh=0.34),
     "jasmine": sailor(BLUE, top=CREAM, legs=WHITE, thigh=0.36),
     "mindy": cardigan(BLUE, knit=_LILAC, legs=BLACK),
-    "crowler": long_coat(GOLD, coat=BLUE, pants=BLUE, shirt=_PINK, mark="star", hem=0.50),
+    "crowler": long_coat(GOLD, coat=BLUE, pants=shade(BLUE, v=0.62, s=0.9), shirt=_PINK, mark="star", hem=0.50),
     "student_m1": tunic(TINT, cloth=TINT, piping=shade(TINT, v=0.80), pants=CHARCOAL, slot="tint"),
     "student_f1": pinafore(BLUE),
     "student_f2": sailor(BLUE, skirt=NAVY, legs=BLACK, thigh=0.57, bow=YELLOW),

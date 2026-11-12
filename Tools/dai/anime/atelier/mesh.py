@@ -371,7 +371,7 @@ def w_hips(z_start, z_full, amount=0.8):
 
 
 # --------------------------------------------------------------------------- Blender mesh
-def assemble(name, parts, arm, material_fn, outline=0.0030, log=None):
+def assemble(name, parts, arm, material_fn, outline=0.0030, log=None, outline_mat=OUTLINE_MAT):
     """Join parts into one skinned mesh object: materials, UVs, vertex groups, shape keys, rounded shading
     normals and the inverted-hull ink line (per-vertex width = outline * part.outline)."""
     import bpy
@@ -420,7 +420,7 @@ def assemble(name, parts, arm, material_fn, outline=0.0030, log=None):
     allUV = np.concatenate([UV, UV])
     allN = np.concatenate([N, -hull_n])
     all_faces = faces + hull_faces
-    fmat = fmat + [OUTLINE_MAT] * len(hull_faces)
+    fmat = fmat + [outline_mat] * len(hull_faces)
 
     me = bpy.data.meshes.new(name)
     me.from_pydata(allV.tolist(), [], all_faces)

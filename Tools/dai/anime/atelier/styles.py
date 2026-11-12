@@ -44,11 +44,11 @@ HAIR = {
                     back=dict(to=0.68, free=0.045, n=11, curl=0.8, flare=0.08)),
     # boys
     "spiky": dict(fringe=dict(kind="m", to=0.40, n=7, tip=0.022, spread=1.7),
-                  spikes=dict(n=16, lift=0.60, free=0.075, flare=1.0)),
+                  spikes=dict(n=16, lift=0.60, free=0.075, flare=1.0, side_tame=0.5)),
     # the same idea with the spikes standing out instead of hanging (reads spikier on a tall head)
     "spiky_up": dict(fringe=dict(kind="m", to=0.36, n=7, tip=0.018, spread=1.7),
-                     spikes=dict(n=15, lift=0.9, free=0.066, flare=1.2, up=1.1, gravity=0.18, rings=(0.30, 0.40, 0.50),
-                                 lift_decay=0.2, start=64.0),
+                     spikes=dict(n=15, lift=0.9, free=0.066, flare=1.2, up=1.1, gravity=0.18, rings=(0.36, 0.45, 0.53),
+                                 lift_decay=0.2, start=64.0, side_tame=0.6),
                      back=dict(to=0.64, free=0.03, n=10, layers=1, flare=0.25, curl=0.8)),
     # swept-up crest: every spike keeps rising
     "crest": dict(fringe=dict(kind="m", to=0.37, n=5, tip=0.016, spread=1.8),

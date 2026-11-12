@@ -83,16 +83,18 @@ def blazer_m(accent, jacket=NAVY, pants=CHARCOAL, shoes=BROWN, open_=13.0, slot=
              shirt=WHITE, hem=0.89, trim=None, band=True, pouch=True):
     """Shirt and tie under an open piped blazer, trousers, deck box on the belt."""
     trim = trim or accent
-    out = [("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.655, cells=(1, 1))),
+    out = [("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.655, cells=(1, 1), detail=dict(placket=dict(w=0.028, buttons=5)))),
            ("collar", dict(color=shirt, kind="shirt")),
-           ("pants", dict(color=pants, ease=0.014, style=dict(), leg_style=dict(fold=0.25, folds=2)))]
+           ("pants", dict(color=pants, ease=0.014))]
     if tie:
         out.append(("tie", dict(color=accent, style=dict(stripes=dict(n=7, width=0.28, color=shade(accent, v=0.62),
                                                                      axis="v")))))
     out += [("belt", dict(color=BLACK, pouch=shade(accent, v=0.85) if pouch else None)),
             ("top", dict(color=jacket, hem=hem, ease=0.014, open=open_, v=0.11, cuff=0.004, slot=slot, flare=0.006,
                          style=dict(edge=[(0.014, trim)], hem=[(0.035, trim)]),
-                         sleeve_style=dict(hem=[(0.05, trim), (0.018, WHITE)]))),
+                         sleeve_style=dict(hem=[(0.05, trim), (0.018, WHITE)]),
+                         detail=dict(lapel=dict(color=shade(jacket, v=0.86, s=1.08)), pockets=("flap", "chest_r"),
+                                     chest_kind="welt", buttons=dict(n=2, x=0.050, color=GOLD), back_seam=True))),
             ("shoes", dict(color=shoes, kind="loafer"))]
     if band:
         out.append(("band", dict(color=accent, side="l", x=0.275, ease=0.022, style=dict(hem=[(0.2, WHITE)],
@@ -107,9 +109,10 @@ def bomber_m(accent, body=None, sleeves=WHITE, pants=CHARCOAL, shoes=WHITE, slot
     return [("top", dict(color=BLACK, hem=0.97, ease=0.005, sleeves="short", cells=(1, 1))),
             ("pants", dict(color=pants, ease=0.016, leg_style=dict(hem=[(0.04, dark)]))),
             ("belt", dict(color=BLACK, pouch=dark)),
-            ("top", dict(color=body, hem=0.955, ease=0.015, slot=slot, cuff=-0.004, puff=0.006,
+            ("top", dict(color=body, hem=0.955, ease=0.015, slot=slot, cuff=-0.004,
                          style=dict(hem=[(0.09, dark)], edge=[(0.008, WHITE)]), sleeve_color=sleeves,
-                         sleeve_style=dict(hem=[(0.07, dark)]))),
+                         sleeve_style=dict(hem=[(0.07, dark)], ribs=dict(n=18, v1=0.07, depth=0.30)),
+                         detail=dict(zip=True, pockets=("welt",), ribs=0.045, yoke=True))),
             ("collar", dict(color=dark, kind="stand", slot=slot)),
             ("shoes", dict(color=shoes, kind="sneaker", sole=WHITE, toe=accent))] + _pin(WHITE, kind=mark)
 
@@ -117,13 +120,15 @@ def bomber_m(accent, body=None, sleeves=WHITE, pants=CHARCOAL, shoes=WHITE, slot
 def coat_m(accent, coat=BLACK, pants=BLACK, shirt=None, shoes=BLACK, mark="diamond", hem=0.52):
     """Long open coat with a lined edge over a high-collar shirt, boots."""
     shirt = shirt or shade(accent, v=0.55, s=0.8)
-    return [("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.64, cells=(1, 1))),
+    return [("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.64, cells=(1, 1), detail=dict(zip=True))),
             ("collar", dict(color=shirt, kind="stand")),
             ("pants", dict(color=pants, ease=0.013)),
             ("belt", dict(color=shade(accent, v=0.7), pouch=accent, buckle=SILVER)),
             ("top", dict(color=coat, hem=hem, ease=0.016, open=17.0, v=0.13, cuff=0.006, flare=0.030, tail="coattail",
                          style=dict(edge=[(0.010, accent), (0.006, SILVER)], hem=[(0.012, accent)]),
-                         sleeve_style=dict(hem=[(0.07, accent), (0.015, SILVER)]), cells=(2, 4))),
+                         sleeve_style=dict(hem=[(0.07, accent), (0.015, SILVER)]), cells=(2, 4),
+                         detail=dict(lapel=dict(z=1.12, w=0.058, color=shade(accent, v=0.72)), pockets=("flap",),
+                                     pocket_z=0.90, pocket_button=SILVER, yoke=True, back_seam=True))),
             ("shoes", dict(color=shoes, kind="boot", shaft=0.30, sole=BLACK)),
             ("buttons", dict(color=SILVER, z0=1.10, z1=1.24, n=3, x=0.060))] + _pin(accent, kind=mark)
 
@@ -131,13 +136,14 @@ def coat_m(accent, coat=BLACK, pants=BLACK, shirt=None, shoes=BLACK, mark="diamo
 def vest_m(accent, vest=CHARCOAL, pants=CHARCOAL, shoes=BROWN, mark="diamond", slot="cloth"):
     """Rolled shirt sleeves, tie and a fitted vest."""
     return [("top", dict(color=WHITE, hem=0.97, ease=0.006, sleeves="elbow", cuff=0.004, cells=(1, 1),
-                         sleeve_style=dict(hem=[(0.10, shade(WHITE, v=0.88))]))),
+                         sleeve_style=dict(hem=[(0.10, shade(WHITE, v=0.88))]), detail=dict(placket=dict(w=0.028, buttons=5)))),
             ("collar", dict(color=WHITE, kind="shirt")),
             ("pants", dict(color=pants, ease=0.014)),
             ("tie", dict(color=accent)),
             ("belt", dict(color=BROWN, pouch=accent)),
             ("top", dict(color=vest, hem=0.975, ease=0.013, sleeves="none", v=0.16, slot=slot,
-                         style=dict(edge=[(0.012, accent)], hem=[(0.03, accent)]))),
+                         style=dict(edge=[(0.012, accent)], hem=[(0.03, accent)]),
+                         detail=dict(pockets=("welt",), pocket_z=1.075, pocket_x=0.070, panels=True, back_seam=True))),
             ("buttons", dict(color=GOLD, z0=1.03, z1=1.15, n=3, x=0.0, r=0.007)),
             ("shoes", dict(color=shoes, kind="loafer")),
             ("band", dict(color=accent, side="r", x=0.62, width=0.022, ease=0.006))] + _pin(accent, kind=mark)
@@ -150,9 +156,10 @@ def sailor_f(accent, skirt=None, top=WHITE, legs=BLACK, shoes=BROWN, bow=None, s
     return [("top", dict(color=top, hem=0.995, ease=0.008, sleeves="short", puff=0.012, slot=slot,
                          style=dict(hem=[(0.05, accent)]), sleeve_style=dict(hem=[(0.16, accent), (0.05, WHITE)]))),
             ("collar", dict(color=accent, kind="sailor", style=dict(hem=[(0.07, WHITE), (0.05, accent), (0.05, WHITE)]))),
-            ("bow", dict(color=bow or RED, knot=GOLD)),
+            ("bow", dict(color=bow or RED, knot=GOLD, size=0.8, tails=0.085)),
             ("skirt", dict(color=skirt, length=length, style=dict(hem=[(0.05, WHITE), (0.045, skirt), (0.035, WHITE)]))),
             ("legwear", dict(color=legs, top=thigh, style=dict(top=[(0.035, accent)]))),
+            ("band", dict(color=accent, side="l", x=0.635, width=0.016, ease=0.004)),
             ("shoes", dict(color=shoes, kind="loafer"))]
 
 
@@ -163,12 +170,17 @@ def blazer_f(accent, jacket=NAVY, skirt=None, legs=WHITE, shoes=BROWN, slot="clo
     st = dict(hem=[(0.035, shade(skirt, v=0.6))])
     if check:
         st["stripes"] = dict(n=14, width=0.12, color=shade(skirt, v=1.35, s=0.7), alpha=0.55)
-    out = [("top", dict(color=WHITE, hem=0.985, ease=0.006, sleeve_to=0.655, cells=(1, 1))),
+    out = [("top", dict(color=WHITE, hem=0.985, ease=0.006, sleeve_to=0.655, cells=(1, 1), detail=dict(placket=dict(w=0.028, buttons=5)))),
            ("collar", dict(color=WHITE, kind="shirt")),
            ("skirt", dict(color=skirt, length=length, style=st)),
            ("top", dict(color=jacket, hem=0.965, ease=0.012, open=11.0, v=0.12, slot=slot, waist=0.004, flare=0.008,
                         style=dict(edge=[(0.016, accent)], hem=[(0.05, accent)]),
-                        sleeve_style=dict(hem=[(0.05, accent), (0.018, WHITE)]))),
+                        sleeve_style=dict(hem=[(0.05, accent), (0.018, WHITE)]),
+                        detail=dict(lapel=dict(z=1.14, w=0.040, color=shade(jacket, v=0.94, s=1.6)), pockets=("welt",),
+                                    pocket_z=1.045, pocket_x=0.066, buttons=dict(n=2, z0=1.03, z1=1.09, x=0.040, color=GOLD),
+                                    panels=True))),
+           ("band", dict(color=accent, side="r", x=0.275, ease=0.018, width=0.028, style=dict(hem=[(0.2, WHITE)],
+                                                                                            top=[(0.2, WHITE)]))),
            ("legwear", dict(color=legs, top=thigh, style=dict(top=[(0.06, accent)]))),
            ("shoes", dict(color=shoes, kind="loafer"))]
     if bow:
@@ -179,14 +191,15 @@ def blazer_f(accent, jacket=NAVY, skirt=None, legs=WHITE, shoes=BROWN, slot="clo
 def cardigan_f(accent, knit=CREAM, skirt=None, legs=BLACK, shoes=BROWN, mark="star", length=0.33):
     """Loose knit over a shirt, long ribbon, tights."""
     skirt = skirt or shade(accent, v=0.75)
-    return [("top", dict(color=WHITE, hem=0.985, ease=0.005, sleeves="short", cells=(1, 1))),
+    return [("top", dict(color=WHITE, hem=0.985, ease=0.005, sleeves="short", cells=(1, 1), detail=dict(placket=dict(w=0.028, buttons=5)))),
             ("collar", dict(color=WHITE, kind="shirt")),
             ("tie", dict(color=accent, length=0.13)),
             ("skirt", dict(color=skirt, length=length, pleats=16, style=dict(hem=[(0.04, accent)]))),
             ("top", dict(color=knit, hem=0.90, ease=0.019, open=9.0, v=0.17, bell=0.012, flare=0.012,
                          style=dict(hem=[(0.07, shade(knit, v=0.88))], edge=[(0.02, shade(knit, v=0.88))],
                                     stripes=dict(n=40, width=0.3, color=shade(knit, v=0.95), alpha=0.5)),
-                         sleeve_style=dict(hem=[(0.10, shade(knit, v=0.88))]))),
+                         sleeve_style=dict(hem=[(0.10, shade(knit, v=0.88))], ribs=dict(n=18, v1=0.10, depth=0.28)),
+                         detail=dict(pockets=("hip",), pocket_z=0.975, pocket_x=0.085, ribs=0.045))),
             ("buttons", dict(color=shade(accent, v=0.9), z0=0.96, z1=1.14, n=4, x=0.030, r=0.007)),
             ("legwear", dict(color=legs, top=0.86)),
             ("shoes", dict(color=shoes, kind="loafer"))] + _pin(accent, x=0.074, z=1.20, kind=mark)
@@ -216,7 +229,9 @@ def dress_f(accent, dress=None, legs=WHITE, shoes=BLACK, mark="star", apron=None
     dress = dress or shade(accent, v=0.7)
     out = [("top", dict(color=dress, hem=0.50, ease=0.010, v=0.07, waist=0.006, flare=0.11, tail="skirt", puff=0.008,
                         cuff=0.004, cells=(2, 4), style=dict(hem=[(0.02, WHITE), (0.015, dress), (0.01, WHITE)]),
-                        sleeve_style=dict(hem=[(0.08, WHITE)]))),
+                        sleeve_style=dict(hem=[(0.08, WHITE)]),
+                        detail=dict(panels=True, pockets=("hip",), pocket_z=0.90,
+                                    placket=dict(w=0.030, buttons=4, z0=1.08, z_top=1.28, z1=1.32, button=WHITE)))),
            ("collar", dict(color=WHITE, kind="shirt")),
            ("legwear", dict(color=legs, top=0.60)),
            ("shoes", dict(color=shoes, kind="loafer", heel=0.010))]
@@ -230,19 +245,23 @@ def dress_f(accent, dress=None, legs=WHITE, shoes=BLACK, mark="star", apron=None
 
 def suit_m(accent, suit=CHARCOAL, shirt=WHITE, shoes=BLACK, long=False, coat=None):
     """Staff suit: closed jacket, tie; `coat`: colour of an open long coat (lab coat) worn over it."""
-    out = [("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.655, cells=(1, 1))),
+    out = [("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.655, cells=(1, 1), detail=dict(placket=dict(w=0.028, buttons=5)))),
            ("collar", dict(color=shirt, kind="shirt")),
            ("tie", dict(color=accent)),
-           ("pants", dict(color=suit, ease=0.015)),
+           ("pants", dict(color=shade(suit, v=0.80), ease=0.015)),
            ("top", dict(color=suit, hem=0.88, ease=0.014, open=6.0, v=0.17, flare=0.006,
                         style=dict(edge=[(0.012, shade(suit, v=1.35))]),
-                        sleeve_style=dict(hem=[(0.03, shade(suit, v=1.35))]))),
+                        sleeve_style=dict(hem=[(0.03, shade(suit, v=1.35))]),
+                        detail=dict(lapel=dict(z=1.13, w=0.055, color=shade(suit, v=1.22)), pockets=("flap", "chest_r"),
+                                    chest_kind="welt", back_seam=True))),
            ("buttons", dict(color=shade(suit, v=0.6), z0=1.00, z1=1.10, n=2, x=0.0)),
            ("shoes", dict(color=shoes, kind="loafer"))]
     if coat:
         out.append(("top", dict(color=coat, hem=0.50, ease=0.020, open=24.0, v=0.14, flare=0.02, tail="coattail",
                                 cells=(2, 4), style=dict(edge=[(0.006, shade(coat, v=0.82))]),
-                                sleeve_style=dict(hem=[(0.03, shade(coat, v=0.85))]))))
+                                sleeve_style=dict(hem=[(0.03, shade(coat, v=0.85))]),
+                                detail=dict(lapel=dict(z=1.14, w=0.050, color=shade(coat, v=0.90)),
+                                            pockets=("hip", "chest"), pocket_z=0.88, yoke=True, back_seam=True))))
     return out
 
 

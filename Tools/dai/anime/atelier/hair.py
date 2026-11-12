@@ -34,6 +34,7 @@ from . import mesh as M
 UV_LENGTH = 1.0                       # metres of hair the texture's v axis covers
 LONG = 0.20                           # free length (m) from which a lock gets a "Long" chain
 BAND_END = 0.156                      # distance from the crown where paint.hair's highlight band ends
+TOP_U = 0.80                          # the sheet's u < TOP_U is the lit face of a lock, the rest its underside
 
 
 def _unit(v):
@@ -217,17 +218,21 @@ class Hair:
                 lk.accent = self._is_accent(accent, layer)
 
     def spikes(self, n=16, lift=0.55, free=0.07, rings=(0.20, 0.34, 0.50), start=48.0, flare=0.9, gravity=0.10,
-               width=0.040, droop=0.0, curl=0.0, wave=0.0, up=0.0, lift_decay=0.35, accent=False):
-        """Spiky cut: locks leave the scalp early, row by row, and point outwards."""
+               width=0.040, droop=0.0, curl=0.0, wave=0.0, up=0.0, lift_decay=0.35, accent=False, side_tame=0.0):
+        """Spiky cut: locks leave the scalp early, row by row, and point outwards. side_tame: how much the
+        spikes over the ears lose of their lift / flare (they stick out sideways like horns otherwise)."""
         a0 = np.radians(start)
         for row, s1 in enumerate(rings):
             m = max(5, int(n * (0.55 + 0.25 * row)))
             az = np.linspace(a0, 2 * np.pi - a0, m, endpoint=True) + row * 0.21
             for a in az:
+                rel = abs(((a + np.pi) % (2 * np.pi)) - np.pi)            # 0 front .. pi back
+                sd = side_tame * float(np.exp(-((rel - 0.5 * np.pi) / 0.62) ** 2))
                 lk = self.lock(a, 0.03, s1 * self._jit(0.06), free=free * self._jit(0.20) * (1.0 + 0.25 * row),
                                loft=(0.012, 0.018 + 0.003 * row), width=width, thick=0.30,
-                               gravity=gravity + droop * row, flare=flare, lift=lift * (1.0 - lift_decay * row),
-                               curl=curl, wave=wave, up=up * (1.0 - 0.12 * row), kind="short", sector=a)
+                               gravity=gravity + droop * row + 0.30 * sd, flare=flare * (1.0 - 0.75 * sd),
+                               lift=lift * (1.0 - lift_decay * row) * (1.0 - sd),
+                               curl=curl, wave=wave, up=up * (1.0 - 0.12 * row) * (1.0 - sd), kind="short", sector=a)
                 lk.accent = self._is_accent(accent, row)
 
     def tail(self, at=(180.0, 0.36), n=6, free=0.45, direction=(0.0, 0.7, 0.35), spread=0.020, wave=0.0,
@@ -294,8 +299,8 @@ class Hair:
         C = cols + 1
         u = np.abs(((np.arange(C) / cols * 5.0) % 1.0) - 0.5) * 2.0          # five strands wound round
         nv = len(p.v)
-        p.uv[: len(lat) * C, 0] = np.tile(u, len(lat))
-        p.uv[len(lat) * C:, 0] = 0.5
+        p.uv[: len(lat) * C, 0] = np.tile(u, len(lat)) * TOP_U
+        p.uv[len(lat) * C:, 0] = 0.5 * TOP_U
         d = np.linalg.norm(p.v - self.head.scalp(0.0, 0.0, 0.0)[0], axis=1) / k
         p.uv[:, 1] = 1.0 - np.clip(0.17 + (d - d.min()) * 0.8, 0.0, 0.999)
         p._accent = bool(accent)
@@ -326,6 +331,7 @@ class Hair:
         p = M.loft("hair_cap", mat, pts, closed=True, cap0=True, outline=0.0)
         d = np.linalg.norm(p.v - self.head.scalp(0.0, 0.0, 0.0)[0], axis=1) / self.k
         p.uv[:, 1] = 1.0 - np.clip(d * 1.25 / UV_LENGTH, 0.0, 0.999)
+        p.uv[:, 0] = 0.5 * TOP_U                                  # the middle of a lock: no streaks on the scalp
         return p.rigid("head").rounded(self.C + (0, 0.012 * self.k, 0), 0.8)
 
     def _braid_part(self, lk, mat):
@@ -356,7 +362,7 @@ class Hair:
         a = np.linspace(0.0, 2 * np.pi, cols, endpoint=False)
         rings = path[:, None] + r[:, None, None] * (np.cos(a)[None, :, None] * side[:, None]
                                                     + np.sin(a)[None, :, None] * nrm[:, None] * 0.82)
-        cu = np.abs(np.linspace(0.0, 2.0, cols + 1) % 2.0 - 1.0)                 # two strands round the plait
+        cu = np.abs(np.linspace(0.0, 2.0, cols + 1) % 2.0 - 1.0) * TOP_U         # two strands round the plait
         p = M.loft("braid", mat, rings, closed=True, cap1=True, us=cu, vs=np.zeros(n + 1))
         C = cols + 1
         v = 1.0 - np.clip((lk.d0 + d / S) / UV_LENGTH, 0.0, 0.999)
@@ -399,11 +405,14 @@ class Hair:
         tan = _unit(np.gradient(lk.p, axis=0))
         side = _unit(np.cross(tan, lk.n))
         nrm = _unit(np.cross(side, tan))
-        us = np.array([-1.0, -0.55, 0.0, 0.55, 1.0, 0.5, 0.0, -0.5])
-        bulge = np.array([0.0, 0.70, 1.0, 0.70, 0.0, -0.28, -0.40, -0.28])
+        # five columns over the lit face, three under it; both edges are doubled so the underside can sit in
+        # its own (darker) strip of the sheet without the texture sweeping across a face
+        us = np.array([-1.0, -0.55, 0.0, 0.55, 1.0, 1.0, 0.5, 0.0, -0.5, -1.0])
+        bulge = np.array([0.0, 0.70, 1.0, 0.70, 0.0, 0.0, -0.28, -0.40, -0.28, 0.0])
         rings = lk.p[:, None] + side[:, None] * (us[None, :, None] * w[:, None, None] * 0.5) + \
             nrm[:, None] * (bulge[None, :, None] * th[:, None, None])
-        cu = np.array([0.0, 0.225, 0.5, 0.775, 1.0, 0.75, 0.5, 0.25, 0.0])
+        cu = np.array([0.0, 0.225, 0.5, 0.775, 1.0]) * TOP_U
+        cu = np.concatenate([cu, [0.99, 0.95, 0.91, 0.87, 0.83, 0.83]])
         dist = lk.d0 + lk.arc / S
         if lk.kind == "short" and 0 < lk.free_from < K and dist[lk.free_from - 1] < BAND_END:
             # a spike leaving the scalp above the painted highlight band: the band belongs to the head's

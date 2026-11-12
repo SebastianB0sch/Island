@@ -74,23 +74,46 @@ class Kit:
         self.mats = mats                                  # {"cloth": name, "tint": name or None, "skin": name}
         self.atlas = {"cloth": P.Atlas(), "tint": P.Atlas(1024, 256) if mats.get("tint") else None}
         self.parts = []
+        self.jobs = []
         self.cloth_prefixes = set()
         # visible skin: torso from this height up, arm / leg intervals
         self.skin = dict(torso=0.80, arms=[(0.09, S.WRIST_X)], legs=[(S.ANKLE, 0.90)], hands=True)
 
     def add(self, part, color, slot="cloth", cells=(1, 1), **style):
-        atlas = self.atlas[slot] or self.atlas["cloth"]
         slot = slot if self.atlas[slot] is not None else "cloth"
-        if style:
-            rect = atlas.paint(atlas.alloc(*cells), color, **style)
-            part.uv = atlas.uv(rect, part.uv)
-        else:
-            rect = atlas.swatch(color)
-            part.uv = atlas.uv(rect, np.full((len(part.v), 2), 0.5), inset=8.0)
+        # painted when the kit is saved (pack()): only then is it known how much room every part can have
+        self.jobs.append((part, color, slot, cells, style))
         part.mat = self.mats[slot]
         part.face_mat = None
         self.parts.append(part)
         return part
+
+    def pack(self):
+        """Paint every part into its atlas, at twice the cell resolution when everything fits."""
+        jobs, self.jobs = self.jobs, []
+        for slot in {j[2] for j in jobs}:
+            mine = [j for j in jobs if j[2] == slot]
+            order = sorted(range(len(mine)), key=lambda i: -(mine[i][3][0] * mine[i][3][1]) if mine[i][4] else 1)
+            src = self.atlas[slot]
+            for scale in (2, 1):
+                atlas = P.Atlas(src.size, src.cell)
+                try:
+                    rects = {i: atlas.alloc(mine[i][3][0] * scale, mine[i][3][1] * scale) for i in order if mine[i][4]}
+                    for i in order:
+                        if not mine[i][4]:
+                            rects[i] = atlas.swatch(mine[i][1])
+                except ValueError:
+                    if scale == 1:
+                        raise
+                    continue
+                break
+            self.atlas[slot] = atlas
+            for i, (part, color, _, _, style) in enumerate(mine):
+                if style:
+                    atlas.paint(rects[i], color, **style)
+                    part.uv = atlas.uv(rects[i], part.uv)
+                else:
+                    part.uv = atlas.uv(rects[i], np.full((len(part.v), 2), 0.5), inset=8.0)
 
     def cover_arms(self, x0, x1):
         out = []
@@ -124,6 +147,7 @@ class Kit:
     def save(self, tex_dir, tex_rel):
         """Write the atlases; -> {material name: palette spec}."""
         import os
+        self.pack()
         specs = {}
         for slot, atlas in self.atlas.items():
             if atlas is None:
@@ -135,9 +159,212 @@ class Kit:
         return specs
 
 
+# --------------------------------------------------------------------------- painted tailoring
+# What a texture artist adds to a garment (paint._detail): seams, plackets, pockets, lapels, fold hints at the
+# joints and soft ambient shade under collars and arms. Built here because only the garment knows where its
+# waist, elbow or knee sits in its own UVs.
+def _perim(ring):
+    r = np.asarray(ring, np.float64)
+    return float(np.linalg.norm(np.diff(np.concatenate([r, r[:1]]), axis=0), axis=1).sum())
+
+
+def _tailored(base, extra):
+    """A style dict with tailoring merged in: list keys concatenate, 'shade' merges, the rest is set once."""
+    out = dict(base or {})
+    for k, val in extra.items():
+        if val is None:
+            continue
+        if k == "shade":
+            sh = dict(val)
+            old = out.get("shade") or {}
+            for kk, vv in old.items():
+                sh[kk] = (list(sh.get(kk, ())) + list(vv)) if kk in ("spots", "under") else vv
+            out["shade"] = sh
+        elif isinstance(val, list):
+            out[k] = list(out.get(k, ())) + val
+        else:
+            out.setdefault(k, val)
+    return out
+
+
+def _top_tailoring(kit, hem, neck, ease, opened, g0, detail):
+    """Painted tailoring of a top's body. detail: dict(placket, zip, buttons, pockets, yoke, panels, back_seam,
+    lapel, ribs, plain) - see top()."""
+    b = kit.body
+    H = neck - hem
+    zm = min(max(0.5 * (hem + neck), 0.9), 1.3)
+    W = _perim(b.torso_ring(zm, ease, n=48))
+    two_pi = 2 * np.pi
+
+    def uu(th):
+        return (th - g0) / (two_pi - 2 * g0) if opened else (th % two_pi) / two_pi
+
+    def vz(z):
+        return (z - hem) / H
+
+    def th_x(x, z):
+        """Azimuth of the front point x metres left of the centre at height z."""
+        th = np.linspace(-1.35, 1.35, 61)
+        ring = b.torso_ring(float(min(z, 1.40)), ease, theta=th)
+        return float(np.interp(x, ring[:, 0], th))
+
+    side_l, side_r = uu(np.pi / 2), uu(3 * np.pi / 2)
+    d = detail or {}
+    st = dict(dims=(W, H), wrap=not opened)
+    if d.get("plain"):
+        return st
+    shade = dict(top=(0.045, 0.34), spots=[], under=[])
+    if hem < 1.20:
+        for u in (side_l, side_r):
+            shade["spots"].append((u, vz(1.285), 0.030, 0.075, 0.42))             # under the arms
+    if hem < 0.93:
+        shade["bottom"] = (0.5 * min(0.30, 0.95 - hem) + 0.04, 0.16)
+    st["shade"] = shade
+    seams = [("u", side_l, 0.0, vz(1.27)), ("u", side_r, 0.0, vz(1.27))]
+    folds, lines, stitch, dots, pockets = [], [], [], [], []
+    if hem < 1.0:                                           # waist creases pulling towards the side seams
+        zw = 1.075
+        for u, sgn in ((uu(np.pi / 2 - 0.42), 1.0), (uu(3 * np.pi / 2 + 0.42), -1.0)):
+            folds.append(dict(u=u, v=vz(zw), len=0.070, n=2, gap=0.019, tilt=0.30 * sgn, s=0.5, thick=0.0026))
+        for u, sgn in ((uu(np.pi - 0.5), -1.0), (uu(np.pi + 0.5), 1.0)):
+            folds.append(dict(u=u, v=vz(zw + 0.01), len=0.055, n=2, gap=0.022, tilt=0.22 * sgn, s=0.4, thick=0.0024))
+    stitch.append(("v", 0.011 / H, None, None))
+    if opened:
+        v_top = vz((d["lapel"].get("z", 1.16) if isinstance(d.get("lapel"), dict) else 1.16)) if d.get("lapel") else 1.0
+        stitch += [("u", 0.011 / W, 0.0, v_top), ("u", 1.0 - 0.011 / W, 0.0, v_top)]
+    if d.get("back_seam") or hem < 0.80:
+        seams.append(("u", uu(np.pi), 0.0, vz(1.36)))
+    if d.get("yoke"):
+        zy = d["yoke"] if isinstance(d["yoke"], float) else 1.325
+        lines += [(uu(np.pi - 1.25), vz(zy + 0.012), uu(np.pi), vz(zy - 0.008)),
+                  (uu(np.pi), vz(zy - 0.008), uu(np.pi + 1.25), vz(zy + 0.012))]
+    if d.get("panels"):                                     # princess seams front and back
+        z1 = 1.30
+        for th in (0.50, two_pi - 0.50, np.pi - 0.55, np.pi + 0.55):
+            seams.append(("u", uu(th), 0.0, vz(z1)))
+    pk = d.get("placket")
+    if pk and not opened:                                   # button band down the closed front
+        w = pk.get("w", 0.030)
+        z1 = pk.get("z1", neck)
+        st.setdefault("blocks", [])
+        if pk.get("color") is not None:
+            st["blocks"] = [(-0.5 * w / W, 0.5 * w / W, 0.0, vz(z1), pk["color"])]
+        seams += [("u", 0.5 * w / W, 0.0, vz(z1)), ("u", 1.0 - 0.5 * w / W, 0.0, vz(z1))]
+        n = pk.get("buttons", 0)
+        if n:
+            for z in np.linspace(pk.get("z0", hem + 0.05), pk.get("z_top", neck - 0.05), n):
+                dots.append((0.0, vz(z), pk.get("r", 0.0055), pk.get("button", (0.92, 0.92, 0.90))))
+    if d.get("zip") and not opened:
+        seams.append(("u", 0.0, 0.0, 1.0))
+        stitch += [("u", 0.007 / W, 0.0, 1.0), ("u", 1.0 - 0.007 / W, 0.0, 1.0)]
+    bt = d.get("buttons")
+    if bt and opened:                                       # buttons on the left front of an open jacket
+        for z in np.linspace(bt.get("z0", 1.04), bt.get("z1", 1.14), bt.get("n", 2)):
+            dots.append((uu(th_x(bt.get("x", 0.045), z)), vz(z), bt.get("r", 0.0065), bt.get("color", (0.85, 0.70, 0.30))))
+    for name in d.get("pockets", ()):
+        if name in ("chest", "chest_r"):
+            sx = 1.0 if name == "chest" else -1.0
+            z = 1.262
+            u = uu(th_x(sx * 0.064, z)) if sx > 0 else uu(two_pi + th_x(sx * 0.064, z))
+            pockets.append(dict(u=u, v=vz(z), w=0.066, h=0.070, kind=d.get("chest_kind", "patch")))
+        elif name in ("hip", "flap", "welt"):
+            z = d.get("pocket_z", max(hem + 0.085, 0.925))
+            for sx in (1.0, -1.0):
+                th = th_x(sx * d.get("pocket_x", 0.082), z)
+                u = uu(th) if sx > 0 else uu(two_pi + th)
+                pockets.append(dict(u=u, v=vz(z), w=0.092, h=0.085 if name != "welt" else 0.0,
+                                    kind={"hip": "patch"}.get(name, name), button=d.get("pocket_button"),
+                                    tilt=-0.10 * sx if name == "welt" else 0.0))
+    if d.get("lapel") and opened:
+        lp = dict(d["lapel"]) if isinstance(d["lapel"], dict) else {}
+        zb = lp.pop("z", 1.16)
+        st["lapel"] = dict(dict(v0=vz(zb), w=0.050, notch=vz(1.315)), **lp)
+    if d.get("ribs"):
+        st["ribs"] = dict(n=int(W / 0.011), v1=d["ribs"] / H, depth=0.30)
+    st.update(seams=seams, creases=folds, lines=lines, stitch=stitch, dots=dots, pockets=pockets)
+    return st
+
+
+def _sleeve_tailoring(kit, x0, x1, ease, rolled=False):
+    b = kit.body
+    L = x1 - x0
+    W = _perim(b.arm_ring(min(0.5 * (x0 + x1), 0.40), ease))
+
+    def vx(x):
+        return 1.0 - (x - x0) / L
+
+    st = dict(dims=(W, L), wrap=True, seams=[("u", 0.75, 0.0, 1.0)], creases=[], stitch=[("v", 0.014 / L, None, None)],
+              shade=dict(spots=[(0.75, vx(0.205), 0.030, 0.070, 0.42)], bottom=(0.03, 0.10)))
+    if x1 > S.SHOULDER_X + 0.05:
+        st["seams"].append(("v", vx(S.SHOULDER_X - 0.012), None, None))        # armhole seam
+    if x1 > S.ELBOW_X + 0.04:
+        ve = vx(S.ELBOW_X)
+        st["creases"] += [dict(u=0.0, v=ve, len=0.070, n=3, gap=0.015, fan=0.9, s=0.70),
+                        dict(u=0.5, v=ve - 0.02 / L, len=0.040, n=2, gap=0.016, s=0.45),
+                        dict(u=0.92, v=vx(0.60), len=0.050, n=2, gap=0.014, tilt=0.25, s=0.5)]
+        st["shade"]["spots"].append((0.0, ve, 0.022, 0.035, 0.22))
+    elif rolled:
+        st["creases"].append(dict(u=0.0, v=0.16, len=0.06, n=2, gap=0.012, s=0.5))
+    return st
+
+
+def _leg_tailoring(kit, hem, top_z, ease, crease=True):
+    b = kit.body
+    H = top_z - hem
+    W = _perim(b.leg_ring(max(hem, 0.5), ease))
+
+    def vz(z):
+        return (z - hem) / H
+
+    st = dict(dims=(W, H), wrap=True, seams=[("u", 0.0, 0.0, 1.0), ("u", 0.5, 0.0, 1.0)], creases=[], lines=[],
+              stitch=[("v", 0.016 / H, None, None)],
+              shade=dict(top=(0.05, 0.22), spots=[(0.5, vz(0.82), 0.040, 0.10, 0.34)], bottom=(0.05, 0.14)))
+    if crease and hem < 0.40:
+        st["lines"].append((0.25, vz(hem + 0.02), 0.25, vz(0.80)))
+    if hem < S.KNEE - 0.08:
+        st["creases"] += [dict(u=0.75, v=vz(S.KNEE), len=0.085, n=3, gap=0.017, curve=0.25, s=0.75),
+                        dict(u=0.25, v=vz(S.KNEE + 0.035), len=0.055, n=2, gap=0.022, curve=-0.3, s=0.42),
+                        dict(u=0.30, v=vz(0.835), len=0.075, n=2, gap=0.024, tilt=-0.45, s=0.5)]
+    if hem < 0.20:
+        st["creases"] += [dict(u=0.22, v=vz(hem + 0.060), len=0.085, n=2, gap=0.020, tilt=0.12, s=0.65),
+                        dict(u=0.70, v=vz(hem + 0.075), len=0.070, n=2, gap=0.022, tilt=-0.15, s=0.55)]
+    return st
+
+
+def _hip_tailoring(kit, z0, waist, ease, pockets=True):
+    b = kit.body
+    H = waist - z0
+    W = _perim(b.torso_ring(0.95, ease, n=48))
+
+    def vz(z):
+        return (z - z0) / H
+
+    def ux(x, z=0.98):
+        th = np.linspace(-1.35, 1.35, 61)
+        ring = b.torso_ring(z, ease, theta=th)
+        return (float(np.interp(x, ring[:, 0], th)) / (2 * np.pi)) % 1.0
+
+    band = vz(waist - 0.034)
+    st = dict(dims=(W, H), wrap=True, seams=[("v", band, None, None), ("u", 0.0, 0.0, band), ("u", 0.5, 0.0, band),
+                                             ("u", 0.25, 0.0, band), ("u", 0.75, 0.0, band)],
+              lines=[], pockets=[], stitch=[], shade=dict(top=(0.03, 0.30)))
+    uf = ux(0.024)
+    st["lines"] += [(uf, band, uf, vz(z0 + 0.075)), (uf, vz(z0 + 0.075), 0.0, vz(z0 + 0.045))]       # fly
+    for x in (0.062, -0.062):                                # belt loops
+        st["pockets"].append(dict(u=ux(x), v=vz(waist - 0.017), w=0.011, h=0.036))
+    for u in (0.25, 0.75, 0.5 - 0.085 / W, 0.5 + 0.085 / W):
+        st["pockets"].append(dict(u=u, v=vz(waist - 0.017), w=0.011, h=0.036))
+    if pockets:
+        for sx in (1.0, -1.0):                               # slanted front pockets, welted back pockets
+            st["lines"].append((ux(sx * 0.070), band, 0.25 if sx > 0 else 0.75, vz(waist - 0.125)) if sx > 0 else
+                               (0.75, vz(waist - 0.125), ux(sx * 0.070), band))
+            st["pockets"].append(dict(u=0.5 + sx * 0.080 / W, v=vz(waist - 0.085), w=0.085, kind="welt"))
+    return st
+
+
 # --------------------------------------------------------------------------- shells
 def _torso_shell(kit, name, z0, z1, ease, n=44, gap=None, flare=0.0, rows=None, front=0.0, back=0.0,
-                 waist=0.0, top_in=0.0):
+                 waist=0.0, top_in=0.0, cap0=False):
     """Shell round the torso from z0 (hem) to z1. ease: m, or fn(z). gap: front opening half angle (rad) or
     fn(z); flare: extra ease at the hem fading over 0.2 m; waist: cinch at the waist; top_in: pull the top
     ring towards the neck (shoulder seam)."""
@@ -155,7 +382,7 @@ def _torso_shell(kit, name, z0, z1, ease, n=44, gap=None, flare=0.0, rows=None, 
         g = (gap(z) if callable(gap) else gap) if opened else 0.0
         th = np.linspace(g, 2 * np.pi - g, n) if opened else np.linspace(0.0, 2 * np.pi, n, endpoint=False)
         rings.append(b.torso_ring(min(z, 1.405), e, theta=th, front=front, back=back) * (1, 1, 0) + (0, 0, z))
-    p = M.loft(name, None, np.array(rings), closed=not opened, outline=1.0)
+    p = M.loft(name, None, np.array(rings), closed=not opened, outline=1.0, cap0=cap0 and not opened)
     return p.weights(M.w_torso)
 
 
@@ -172,7 +399,7 @@ def _sleeve(kit, name, side, x0, x1, ease, n=14, cuff=0.0, puff=0.0, bell=0.0):
     return M.loft(name, None, np.array(rings), closed=True, vs=np.linspace(1.0, 0.0, len(xs))).weights(M.w_arm(side))
 
 
-def _leg_shell(kit, name, side, z0, z1, ease, n=16, flare=0.0, cuff=0.0):
+def _leg_shell(kit, name, side, z0, z1, ease, n=16, flare=0.0, cuff=0.0, taper=0.0):
     b = kit.body
     s = 1.0 if side == "l" else -1.0
     zs = np.linspace(z1, z0, max(4, int((z1 - z0) / 0.026)))
@@ -180,6 +407,8 @@ def _leg_shell(kit, name, side, z0, z1, ease, n=16, flare=0.0, cuff=0.0):
     for z in zs:
         t = (z1 - z) / max(z1 - z0, 1e-6)
         e = (ease(z) if callable(ease) else ease) + flare * t ** 2 + cuff * M.smooth((t - 0.90) / 0.06)
+        if taper:
+            e = e * (1.0 - taper * M.smooth((S.KNEE + 0.12 - z) / 0.30))
         rings.append(b.leg_ring(z, e, n=n, side=s))
     p = M.loft(name, None, np.array(rings), closed=True, vs=np.linspace(1.0, 0.0, len(zs)))
     return p.weights(M.w_leg(side))
@@ -198,10 +427,14 @@ def _box(name, centre, size, rot_z=0.0):
 # --------------------------------------------------------------------------- garments
 def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, v=0.0, flare=0.0, waist=0.0,
         slot="cloth", cuff=0.0, puff=0.0, bell=0.0, sleeve_to=None, sleeve_color=None, style=None,
-        sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2)):
+        sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2), detail=None):
     """Shirt / blouse / jacket / coat body with optional sleeves.
     open: front opening half angle in degrees (0 = closed); v: depth (m) of a V neckline below `neck`;
-    tail: hem chains to hang the part below the hips from ("skirt" | "coattail")."""
+    tail: hem chains to hang the part below the hips from ("skirt" | "coattail");
+    detail: painted tailoring on top of the automatic seams / fold hints / ambient shade (_top_tailoring):
+    dict(placket=dict(w, buttons, color, button), zip=True, buttons=dict(n, z0, z1, x, color),
+    pockets=("chest" | "chest_r" | "hip" | "flap" | "welt", ...), yoke=True, panels=True, back_seam=True,
+    lapel=True | dict(z, w, color), ribs=<metres of ribbing at the hem>, plain=True); False: none at all."""
     g0 = math.radians(open)
 
     def gap(z):
@@ -215,15 +448,22 @@ def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, 
         hang(p, tail, 0.90, 0.90 - hem, share=0.55)
         kit.cloth_prefixes.add(tail)
     p = M.solidify(p, thick)
+    opened = open > 0 or v > 0
+    if detail is not False:
+        style = _tailored(style, _top_tailoring(kit, hem, neck, ease, opened, g0 + 1e-4, detail))
     kit.add(p, color, slot, cells=cells, **(style or {}))
     if open <= 0:                                        # closed fronts hide the chest up to their neckline
         kit.skin["torso"] = max(kit.skin["torso"], (neck - v - 0.03) if v > 0 else neck - 0.012)
     if sleeves != "none":
         x1 = sleeve_to or {"long": S.WRIST_X - 0.012, "short": 0.300, "cap": 0.235, "elbow": 0.420}[sleeves]
+        if detail is not False:
+            sleeve_style = _tailored(sleeve_style, _sleeve_tailoring(kit, 0.090, x1, ease * 0.72,
+                                                                    rolled=sleeves in ("elbow", "short")))
         for side in ("l", "r"):
             sl = M.solidify(_sleeve(kit, f"sleeve_{side}", side, 0.090, x1, ease * 0.72, cuff=cuff, puff=puff, bell=bell),
                             thick * 0.8)
-            kit.add(sl, sleeve_color or color, slot, cells=(1, 1), **(sleeve_style or {}))
+            kit.add(sl, sleeve_color or color, slot, cells=(1, 2 if (cells[1] > 1 and x1 > 0.45) else 1),
+                    **(sleeve_style or {}))
         kit.cover_arms(0.0, x1)
     else:
         kit.cover_arms(0.0, 0.155)
@@ -253,25 +493,34 @@ def skirt(kit, color, waist=1.035, length=0.36, flare=0.55, pleats=14, style=Non
         p.weights(M.w_hips(0.95, 0.72, 0.55))
         hang(p, "skirt", waist - 0.07, length - 0.07)
         p = M.solidify(p, thick)
-        st = dict(style or {})
-        kit.add(p, (under or color) if layer else color, slot, cells=(2, 1), **(st if not layer else {}))
+        st = _tailored(style, dict(dims=(_perim(rings[len(rings) // 2]), length), wrap=True,
+                                   pleats=dict(n=pleats, depth=0.55), shade=dict(top=(0.03, 0.30), bottom=(0.07, 0.14)),
+                                   seams=[("v", 1.0 - 0.030 / length, None, None)],
+                                   stitch=[("v", 0.012 / length, None, None)]))
+        kit.add(p, (under or color) if layer else color, slot, cells=(4, 2), **(st if not layer else {}))
     kit.cloth_prefixes.add("skirt")
     kit.cover_legs(hem + 0.06, 1.0)
     # shorts under the skirt so nothing is bare from below
     for side in ("l", "r"):
         s = _leg_shell(kit, "under", side, max(hem + 0.05, 0.74), 0.90, 0.003)
-        kit.add(s, P.shade(color, v=0.55), "cloth", cells=(1, 1))
-    hip = _torso_shell(kit, "under_hip", 0.80, 0.93, 0.002, n=28)
-    kit.add(hip, P.shade(color, v=0.55), "cloth")
+        kit.add(s, P.shade(color, v=0.74), "cloth", cells=(1, 1))
+    hip = _torso_shell(kit, "under_hip", 0.80, 0.93, 0.002, n=28, cap0=True)
+    kit.add(hip, P.shade(color, v=0.74), "cloth")
 
 
 def pants(kit, color, waist=1.03, hem=0.10, ease=0.012, flare=0.0, cuff=0.0, style=None, slot="cloth",
-          leg_style=None):
-    hip = _torso_shell(kit, "pants_hip", 0.80, waist, lambda z: ease * (0.6 + 0.4 * M.smooth((1.0 - z) / 0.1)), n=36)
+          leg_style=None, taper=0.0, crease=True, detail=None):
+    """Trousers / shorts. taper: how much of the ease the legs lose from the knee down (0..1: straight ->
+    slim); crease: pressed front crease; detail=False: no painted tailoring."""
+    hip_ease = lambda z: ease * (0.6 + 0.4 * M.smooth((1.0 - z) / 0.1))
+    hip = _torso_shell(kit, "pants_hip", 0.80, waist, hip_ease, n=36, cap0=True)
     hip.weights(M.w_hips(0.93, 0.80, 0.55))
-    kit.add(hip, color, slot, **(style or {}))
+    if detail is not False:
+        style = _tailored(style, _hip_tailoring(kit, 0.80, waist, ease * 0.8))
+        leg_style = _tailored(leg_style, _leg_tailoring(kit, hem, 0.885, ease, crease=crease))
+    kit.add(hip, color, slot, cells=(2, 1), **(style or {}))
     for side in ("l", "r"):
-        leg = _leg_shell(kit, f"pants_{side}", side, hem, 0.885, ease, flare=flare, cuff=cuff)
+        leg = _leg_shell(kit, f"pants_{side}", side, hem, 0.885, ease, flare=flare, cuff=cuff, taper=taper)
         leg = M.solidify(leg, 0.003) if hem > 0.12 else leg
         kit.add(leg, color, slot, cells=(1, 2), **(leg_style or {}))
     kit.cover_legs(hem, 1.0)
@@ -282,7 +531,11 @@ def legwear(kit, color, top=0.60, style=None, ease=0.0018, bottom=S.ANKLE - 0.01
     for side in ("l", "r"):
         leg = _leg_shell(kit, f"sock_{side}", side, bottom, top, ease, cuff=0.0)
         leg.outline *= 0.8
-        kit.add(leg, color, "cloth", cells=(1, 2), **(style or {}))
+        H = top - bottom
+        st = _tailored(style, dict(dims=(_perim(kit.body.leg_ring(0.5 * (top + bottom), ease)), H), wrap=True,
+                                   shade=dict(bottom=(0.05, 0.12), under=[(1.0 - 0.012 / H, 0.012, 0.25)]),
+                                   ribs=dict(n=22, v0=1.0 - 0.030 / H, depth=0.22)))
+        kit.add(leg, color, "cloth", cells=(1, 2), **st)
     kit.cover_legs(0.0, top)
 
 
@@ -338,17 +591,26 @@ def collar(kit, color, kind="shirt", style=None, size=1.0, slot="cloth", z=1.398
     r0 = b.neck_r + 0.006
     if kind in ("shirt", "stand"):
         g = math.radians(16 if kind == "shirt" else 9)
-        th = np.linspace(g, 2 * np.pi - g, 30)
+        th = np.linspace(g, 2 * np.pi - g, 38 if kind == "shirt" else 30)
         c, s = np.cos(th), np.sin(th)
         rows = []
-        prof = ((0.034, 0.000), (0.036, 0.010), (0.018, 0.024 * size)) if kind == "shirt" else \
-            ((0.000, 0.004), (0.020 * size, 0.004), (0.038 * size, 0.008))
-        for dz, dr in prof:
-            point = 1.0 + (0.55 * np.exp(-((np.minimum(th, 2 * np.pi - th) - g) / 0.30) ** 2) if kind == "shirt"
-                           and dr > 0.02 else 0.0)
-            rr = r0 + dr * point
-            y = -c * rr * 1.08 + b.neck_c(z + dz)
-            rows.append(np.column_stack([s * rr, y, np.full(len(th), z + dz - (0.012 * (point - 1.0)))]))
+        if kind == "shirt":
+            # a folded collar: the stand rises round the neck, the leaf turns over and lies on the shoulders,
+            # running out into two points over the chest
+            d = (np.minimum(th, 2 * np.pi - th) - g) / 0.42
+            point = np.exp(-d ** 2)
+            back = M.smooth((-c - 0.2) / 0.8)
+            for dz, dr, k in ((0.000, 0.000, 0.0), (0.030, 0.002, 0.0), (0.035, 0.009, 0.0), (0.024, 0.021, 0.45),
+                              (0.008, 0.034 * size, 1.0)):
+                rr = r0 + dr * (1.0 + 0.30 * point * k)
+                zz = z + dz - (0.034 * size * point + 0.006 * back) * k
+                y = -c * rr * 1.08 + b.neck_c(z + dz) - 0.010 * point * k
+                rows.append(np.column_stack([s * rr * (1.0 + 0.10 * point * k), y, zz]))
+        else:
+            for dz, dr in ((0.000, 0.004), (0.020 * size, 0.004), (0.038 * size, 0.008)):
+                rr = r0 + dr
+                y = -c * rr * 1.08 + b.neck_c(z + dz)
+                rows.append(np.column_stack([s * rr, y, np.full(len(th), z + dz)]))
         p = M.loft("collar", None, np.array(rows), closed=False)
         p = M.solidify(p.weights(M.w_spine), 0.003)
         kit.add(p, color, slot, **(style or {}))
@@ -383,12 +645,13 @@ def bow(kit, color, z=1.335, size=1.0, tails=0.06, y=None, x=0.0, bone=None, sty
     parts = []
     for sx in (1.0, -1.0):
         t = np.linspace(0.0, 1.0, 9)
-        path = c + np.column_stack([sx * 0.052 * size * t, 0.006 * np.sin(t * np.pi), 0.012 * size * np.sin(t * np.pi)])
-        r = 0.020 * size * np.sin(np.clip(t * 1.25 + 0.12, 0, 1) * np.pi) ** 0.7 + 0.003
-        parts.append(M.tube("bow", None, path, r, n=10, up=(0, 1, 0), flat=0.34))
+        path = c + np.column_stack([sx * 0.056 * size * t, 0.004 * np.sin(t * np.pi), 0.016 * size * t ** 1.3])
+        r = 0.019 * size * np.sin(np.clip(t * 0.92 + 0.10, 0, 1) * np.pi * 0.62) ** 0.8 + 0.003
+        parts.append(M.tube("bow", None, path, r, n=10, up=(0, 1, 0), flat=0.24, power=2.6))
         if tails:
-            tp = c + np.column_stack([sx * (0.010 + 0.022 * t), -0.004 * t, -tails * t])
-            parts.append(M.tube("bowtail", None, tp, 0.011 * size * (0.7 + 0.5 * t), n=8, up=(0, 1, 0), flat=0.22))
+            tp = c + np.column_stack([sx * (0.008 + 0.026 * t ** 1.2), -0.004 * t, -tails * t])
+            parts.append(M.tube("bowtail", None, tp, 0.010 * size * (0.75 + 0.55 * t), n=8, up=(0, 1, 0), flat=0.20,
+                                power=3.0))
     parts.append(_box("knot", c, (0.018 * size, 0.014, 0.020 * size)))
     for i, p in enumerate(parts):
         p.rigid(bone) if bone else p.weights(M.w_spine)
@@ -417,8 +680,12 @@ def belt(kit, color, z=1.02, width=0.026, buckle=(0.86, 0.70, 0.30), pouch=None,
         rings.append(r)
     p = M.solidify(M.loft("belt", None, np.array(rings), closed=True), 0.004)
     kit.add(p.weights(M.w_spine), color, "cloth")
-    bk = _box("buckle", (0, b.front_y(z) - ease - 0.004, z), (0.034, 0.010, width * 1.25))
+    fy = b.front_y(z) - ease
+    bk = _box("buckle", (0, fy - 0.004, z), (0.036, 0.010, width * 1.30))
     kit.add(bk.weights(M.w_spine), buckle, "cloth")
+    # a frame buckle: the belt shows through its window, a prong across it
+    kit.add(_box("buckle", (0, fy - 0.0075, z), (0.024, 0.006, width * 0.78)).weights(M.w_spine), color, "cloth")
+    kit.add(_box("buckle", (0.002, fy - 0.0095, z), (0.020, 0.004, width * 0.20)).weights(M.w_spine), buckle, "cloth")
     if pouch is not None:
         a = b.side_x(z - 0.04)
         cy = b.centre_y(z - 0.04)
