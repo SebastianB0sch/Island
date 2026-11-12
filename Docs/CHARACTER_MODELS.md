@@ -26,9 +26,9 @@ keep `student_m1`, so the island's background students never wear the hero's loo
 
 | Part | What is bespoke |
 |---|---|
-| Hair | `hero.comb()` places every lock by hand: a side-parted fringe with one long lock between the eyes, face-framing locks, piecey crown layers, flicked sides, a copper-dyed under-layer that shows at the ends, a short nape tail with a red cord, an ahoge. Built at twice the usual geometric resolution (`res=2`), with a cool highlight ring (`sheen`) and short spring chains on the side and back locks (`min_chain`) |
-| Eyes and brows | `hero.repaint()` replaces the base face's sheets while they are packed into the face-parts atlas: a layered amber iris (lid shadow, gradient body, radial fibres, collarette, inner reflection, limbal ring), two catch-lights, brows in the hair colour |
-| Outfit | a dorm-tinted academy jacket with a cut-away hem (`top(hem_front=...)`: short at the front, long tails at the back on the coat-tail chains), sleeves pushed to the forearm, ink piping and gold trim, over a charcoal high-collar shirt; fingerless gloves, arm band, leather belt with a deck holster, tapered trousers, boots |
+| Hair | `hero.comb()` places every lock by hand: a side-parted fringe with one long lock between the eyes, face-framing locks, a lifted piecey crown, flicked sides, a copper-dyed under-layer that shows at the ends, a nape tail with a red cord, an ahoge. Built at twice the usual geometric resolution (`res=2`), with a cool highlight ring (`sheen`) and short spring chains on the side and back locks (`min_chain`) |
+| Face | `hero.repaint()` replaces the base face's sheets while they are packed into the face-parts atlas: a layered amber iris (lid shadow, gradient body, radial fibres, collarette, inner reflection, limbal ring), two catch-lights, a heavier ink lash line, brows in the hair colour; a sharper jaw, a serious resting expression, gold hoop earrings |
+| Outfit | a dorm-tinted academy coat with one sleeve (`top(sleeve_sides=("l",))`), a cut-away hem (`top(hem_front=...)`: short at the front, long tails on the coat-tail chains), ink piping, a copper lining edge and a gold card-suit border (`motif`), over a fitted black high-collar top. Hardware from the new garments `strap` (a leather strap across the chest with a buckle and card pouch), `legstrap` (thigh strap with a pouch) and `bracer` (an armoured duel-disk guard with a lit ring on the bare forearm), plus a belt stack, fingerless gloves, an arm band, boots |
 
 ![The protagonist in the Slifer, Ra and Obelisk jacket colours](renders/hero.jpg)
 

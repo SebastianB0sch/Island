@@ -5,14 +5,17 @@ Every other cast member is a look from the shared vocabulary (a hair recipe from
 preset from looks.py). The player character is authored piece by piece instead, as an original design:
 
   hair     a hand-placed cut (comb(): every fringe lock, face-framing lock, crown layer and nape lock is
-           placed individually): blue-black, side-parted and swept across the brow, piecey layers on the
-           crown, flicked sides, a copper-dyed under-layer that shows at the ends, and a short tail at the
+           placed individually): blue-black, side-parted with one long lock between the eyes, a lifted,
+           piecey crown, flicked sides, a copper-dyed under-layer that shows at the ends, and a tail at the
            nape tied with a red cord
-  face     the boys' VRoid base face, with its own amber eyes, a slightly sharper jaw and a confident resting
-           expression
-  outfit   a dorm-coloured open academy jacket with long back tails, sleeves pushed to the forearm, dark piping
-           and gold trim, over a charcoal high-collar shirt; fingerless gloves, a duellist's arm band, a
-           leather belt with a deck holster, tapered trousers, boots
+  face     the boys' VRoid base face with its own painted amber eyes, a heavier ink lash line, hair-coloured
+           brows, a sharper jaw, a serious resting expression and gold hoop earrings with a red stone
+  outfit   a dorm-coloured academy coat, open, with a single (left) sleeve, a cut-away front and long back
+           tails, ink piping, a copper lining edge and a gold card-suit border; over a fitted black high-collar
+           top. Hardware: a leather strap from the left shoulder to the right hip with a buckle and a card
+           pouch, a belt stack (a second belt slung low with the deck holster), a thigh strap with a pouch,
+           fingerless gloves, an arm band, and the statement piece - an armoured duel-disk bracer with a lit
+           ring on the bare right forearm
 
 The jacket keeps the runtime "JacketTint" slot (Unreal recolours it by dorm when the player switches dorms);
 the hair does not tint (it is the character's own colour). The generic male students keep student_m1.
@@ -79,8 +82,8 @@ def comb(hr):
         hr.lock(rad(az), 0.08, end, free=free, sweep=0.0, loft=(0.015, 0.020), width=0.056, thick=0.26,
                 gravity=0.48, forward=0.16, curl=curl, flare=0.02, sector=rad(az))
     # crown: piecey layers that leave the scalp early and fall outwards (volume on top, no spikes)
-    hr.spikes(n=12, lift=0.32, free=0.055, rings=(0.24, 0.40), start=58.0, flare=0.75, gravity=0.24, droop=0.10,
-              width=0.058, curl=0.5, side_tame=0.55)
+    hr.spikes(n=13, lift=0.50, free=0.064, rings=(0.20, 0.34, 0.47), start=56.0, flare=0.80, gravity=0.22,
+              droop=0.07, up=0.30, width=0.058, curl=0.35, side_tame=0.60, lift_decay=0.30)
     # sides over the ears: flicked out; the inner one copper
     for sx in (1.0, -1.0):
         # (az, end ring, free, curl, flare, loft): the copper one sits under the outer lock and peeks out below
@@ -92,7 +95,7 @@ def comb(hr):
     # back: a long copper under-layer flicking out below a shorter outer layer
     hr.back(to=0.67, free=0.070, n=10, start=108.0, curl=1.15, flare=0.13, layers=2, width=1.55, accent=[0])
     # nape tail: a short tied tail (red cord) under the back layers
-    hr.tail(at=(180.0, 0.63), n=4, free=0.17, direction=(0.0, 0.40, -0.92), spread=0.014, width=0.040,
+    hr.tail(at=(180.0, 0.63), n=5, free=0.24, direction=(0.0, 0.40, -0.92), spread=0.014, width=0.040,
             gravity=0.40, accent=[1, 3])
     hr.ahoge(free=0.065, az=-0.22)
 
@@ -106,28 +109,42 @@ def hair_style():
 def wear():
     """Garments in wearing order (atelier/outfit.GARMENTS vocabulary; fitted by looks._fit)."""
     from .looks import _fit
-    gold = GOLD
-    ink = INK
+    gold, ink = GOLD, INK
+    suit = dict(kind="diamond", n=30, v=0.040, size=0.32, h=0.014, color=gold)   # card-suit diamonds along the hem
     return _fit([
-        # charcoal shirt with a high stand collar, long sleeves (show under the pushed-up jacket sleeves)
-        ("top", dict(color=SHIRT, hem=0.97, ease=0.006, sleeves="long", cells=(1, 1),
-                     detail=dict(zip=True))),
-        ("collar", dict(color=SHIRT, kind="stand", size=1.25)),
+        # fitted black high-collar top (panelled, zipped) - shows on the bare right arm and down the open front
+        ("top", dict(color=SHIRT, hem=0.97, ease=0.004, sleeves="long", cells=(1, 2),
+                     detail=dict(zip=True, panels=True, yoke=True))),
+        ("collar", dict(color=SHIRT, kind="stand", size=1.30)),
         ("pants", dict(color=PANTS, ease=0.015, taper=0.45,
                        leg_style=dict(hem=[(0.03, shade(PANTS, v=0.75))]))),
-        ("belt", dict(color=LEATHER, z=1.005, width=0.030, buckle=SILVER, pouch=shade(LEATHER, v=0.78), tilt=0.035)),
-        # the academy jacket: open, long back tails, sleeves pushed up to the forearm
-        ("top", dict(color=TINT, hem=0.58, hem_front=0.93, ease=0.020, open=15.0, v=0.12, cuff=0.010, flare=0.034, waist=0.012, tail="coattail",
-                     slot="tint", sleeve_to=0.585, cells=(2, 4),
-                     style=dict(edge=[(0.012, ink), (0.005, gold)], hem=[(0.016, ink), (0.005, gold)]),
-                     sleeve_style=dict(hem=[(0.075, ink), (0.010, gold), (0.012, ink)]),
-                     detail=dict(lapel=dict(z=1.13, w=0.060, color=shade(TINT, v=0.84)), pockets=("chest_r",), chest_kind="welt", yoke=True, back_seam=True, panels=True))),
+        ("belt", dict(color=LEATHER, z=1.010, width=0.030, buckle=SILVER, tilt=0.0)),
+        # a second belt slung low and tilted, carrying the deck holster
+        ("belt", dict(color=shade(LEATHER, v=0.72), z=0.965, width=0.024, buckle=GOLD, ease=0.030, tilt=0.07,
+                      pouch=shade(LEATHER, v=0.95))),
+        ("legstrap", dict(color=shade(LEATHER, v=0.72), side="r", z=0.74, buckle=SILVER, pouch=shade(LEATHER, v=0.9))),
+        # the academy coat: open, one sleeve (left), cut away at the front and long behind, gold card-suit hem
+        ("top", dict(color=TINT, hem=0.50, hem_front=0.95, ease=0.020, open=18.0, v=0.14, cuff=0.012, flare=0.040,
+                     waist=0.012, tail="coattail", slot="tint", sleeve_sides=("l",), cells=(2, 4),
+                     style=dict(edge=[(0.014, ink), (0.006, gold), (0.010, COPPER)],
+                                hem=[(0.020, ink), (0.006, gold)], motif=suit),
+                     sleeve_style=dict(hem=[(0.08, ink), (0.012, gold), (0.012, ink)],
+                                       motif=dict(suit, n=9, v=0.13, size=0.26, h=0.035)),
+                     detail=dict(lapel=dict(z=1.13, w=0.064, color=shade(TINT, v=0.82)), pockets=("chest_r",),
+                                 chest_kind="welt", yoke=True, back_seam=True, panels=True))),
+        # leather strap from the left shoulder across the chest to the right hip, buckle and a card pouch on it
+        ("strap", dict(color=LEATHER, path=[(1.425, 26.0), (1.33, 12.0), (1.18, -22.0), (1.04, -62.0)],
+                       width=0.030, ease=0.030, buckles=(0.38,), buckle=SILVER, pouch=(0.80, shade(LEATHER, v=0.85)))),
+        ("strap", dict(color=LEATHER, path=[(1.425, 154.0), (1.30, 172.0), (1.15, 205.0), (1.04, 240.0)],
+                       width=0.030, ease=0.030, name="strap_back")),
         ("gloves", dict(color=ink, cuff=0.555, style=dict(hem=[(0.10, shade(ink, v=1.5))]))),
-        ("band", dict(color=INK, side="l", x=0.250, width=0.032, ease=0.024,
+        # the statement piece: an armoured duel-disk bracer on the bare right forearm
+        ("bracer", dict(color=(0.30, 0.31, 0.36), side="r", x0=0.445, x1=0.585, trim=gold, disk=INK, glow=COPPER)),
+        ("band", dict(color=INK, side="l", x=0.250, width=0.032, ease=0.026,
                       style=dict(hem=[(0.16, gold)], top=[(0.16, gold)]))),
-        ("buttons", dict(color=gold, z0=1.14, z1=1.26, n=2, x=0.064)),
-        ("emblem", dict(color=gold, z=1.285, x=0.070, kind="star", size=0.017)),
-        ("emblem", dict(color=CORD, z=1.285, x=0.070, kind="disc", size=0.006)),
+        ("buttons", dict(color=gold, z0=1.14, z1=1.26, n=2, x=0.070)),
+        ("emblem", dict(color=gold, z=1.300, x=0.074, kind="star", size=0.017)),
+        ("emblem", dict(color=CORD, z=1.300, x=0.074, kind="disc", size=0.006)),
     ])
 
 
@@ -137,8 +154,8 @@ def look():
     from . import looks as L
     out = L.look("vroid_c", (HAIR, HAIR_TIP), IRIS, hair_style=hair_style(), tint=("jacket",),
                  colors=dict(jacket=TINT, pants=PANTS, shoes=BOOTS, sole=(0.10, 0.10, 0.11)),
-                 expression=dict(Fun=0.10, BrowAngry=0.12), face_shape=dict(chin=0.006, jaw=-0.03),
-                 outline=0.0024)
+                 expression=dict(BrowAngry=0.30, Fun=0.04), face_shape=dict(chin=0.008, jaw=-0.05),
+                 accessories=dict(earrings=(GOLD, CORD)), outline=0.0024)
     out["wear"] = wear()
     out["bespoke"] = KEY
     return out
@@ -242,6 +259,15 @@ def repaint(source, tex, sheets):
     if "eyehighlight" in s:
         iris = next((v for k, v in sheets.items() if "eyeiris" in k.lower()), None)
         return paint_highlight(tex, iris) if iris is not None else tex
+    if "faceeyeline" in s:
+        # a heavier, sharper upper lash line in near-black ink (the base's is soft and brown)
+        from scipy import ndimage
+        out = tex.copy()
+        a = tex[..., 3].astype(np.float32)
+        thick = ndimage.grey_dilation(a, size=(5, 3))
+        out[..., 3] = np.clip(np.maximum(a, thick * 0.92), 0, 255).astype(np.uint8)
+        out[..., :3] = (np.asarray(shade(HAIR, v=0.55, s=0.8), np.float32) * 255).astype(np.uint8)
+        return out
     if "facebrow" in s:
         out = tex.copy()                                     # brows in the hair's own blue-black
         out[..., :3] = (np.asarray(shade(HAIR, v=0.9), np.float32) * 255).astype(np.uint8)

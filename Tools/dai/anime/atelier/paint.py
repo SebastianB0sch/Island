@@ -460,7 +460,7 @@ class Atlas:
     def paint(self, rect, color, **style):
         """Fill a rectangle. style: hem / top (v-bands at the bottom / top: [(width, colour)]), edge (u-bands
         at both u ends: [(width, colour)]), stripes dict(n, width, color, axis), gradient (colour, start,
-        end) towards v = 0, motif dict(kind, n, v, size, color), fold (0..1 soft vertical fold shading);
+        end) towards v = 0, motif dict(kind, n, v, size, color, h), fold (0..1 soft vertical fold shading);
         plus the tailoring keys of _detail() above (seams, pockets, lapel, pleats, shade, folds, ...)."""
         x, y, w, h = rect
         u = (np.arange(w, dtype=np.float32) + 0.5) / w
@@ -484,7 +484,7 @@ class Atlas:
         m = style.get("motif")
         if m:
             cu = (U * m["n"]) % 1.0 - 0.5
-            cv = (V - m["v"]) / (m["size"] * w / h * m["n"])
+            cv = (V - m["v"]) / m.get("h", m["size"] * w / h * m["n"])     # h: explicit half height in v
             if m["kind"] == "diamond":
                 a = (np.abs(cu) / m["size"] + np.abs(cv) < 1.0)
             elif m["kind"] == "dot":
