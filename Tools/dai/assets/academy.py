@@ -1318,8 +1318,10 @@ def _wing_facade_common(mb, xa, xb, y0, y1, eave, roof_h, ridge_axis="x", hollow
             mb.hip_roof((0, 0, 0), d, w, roof_h, "M_AcademyRoof", overhang=1.0)
         if hollow and hollow[1] > eave - 1.5:
             _open_soffit(mb, n0, eave, xa, y0, xb, y1)
-            r = max(0.0, (d - w) / 2)
-            mb.beam((-r, 0, roof_h), (r, 0, roof_h), 0.4, 0.4, "M_Gold")
+        # gold ridge beam along the ridge (world coordinates: it used to be given in the roof's rotated frame
+        # after leaving it, which put a 64 m beam through the arena at y = 0, 7.8-8.2 m up, across the stands)
+        r = max(0.0, (d - w) / 2)
+        mb.beam((cx, cy - r, eave + roof_h), (cx, cy + r, eave + roof_h), 0.4, 0.4, "M_Gold")
 
 
 ROWS = [3.0, 7.5, 12.0, 16.5]
@@ -3489,10 +3491,11 @@ def room_council(C):
     C.box(97.0, y0 + 0.04, z + 1.0, 98.7, y0 + 0.08, z + 2.2, K.TRIM_WHITE, nc=True)
     for i, t in enumerate(("AGENDA", "1. Festival budget", "2. Dorm cup", "3. Slifer roof (again)")):
         C.text(t, 97.85, y0 + 0.085, z + 2.0 - i * 0.2, 180.0, 0.1 if i else 0.13, (0.1, 0.15, 0.4))
-    # council office: secretary's desk, filing, archive boxes
-    C.prop("SM_Int_OfficeDesk", 94.8, -10.4, z, 180.0)
-    C.prop("SM_Int_OfficeChair", 94.8, -9.35, z, 0.0)
-    on_top(C, 94.8, -10.4, z + 0.788, 180.0, 1.6, 0.7, "reception", 81)
+    # council office: secretary's desk, filing, archive boxes.  The desk stands east of the trophy shelves (not
+    # half in front of them) so the way past it into the west half of the office stays ~1 m wide on both sides.
+    C.prop("SM_Int_OfficeDesk", 96.1, -10.4, z, 180.0)
+    C.prop("SM_Int_OfficeChair", 96.1, -9.35, z, 0.0)
+    on_top(C, 96.1, -10.4, z + 0.788, 180.0, 1.6, 0.7, "reception", 81)
     C.prop("SM_Int_Drawers", 98.4, -10.4, z, -90.0)
     C.prop("SM_Int_Drawers", 98.4, -0.6, z, -90.0)
     C.box(98.2, 1.2, z, 98.7, 1.8, z + 1.25, K.TRIM_WHITE)
@@ -3952,13 +3955,40 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
         plinth_bust(C, cx, y1 - 1.2, 180.0, z=z)
         C.plate(cx, y0, z + 2.3, 180.0, name, w=2.6, h=0.26, mat=NAVY_T)
     else:   # store: racks through the whole depth (keeping the camera end free), stocked
-        n_rows = max(2, int((d - 3.4) / 2.0) + 1)
+        # Rows 2.0 m apart leave 1.48 m aisles between the 0.52 m deep racks; they alternate between two fronts
+        # facing each other and two backs.  Stock on the floor stands squarely against ONE rack face per aisle
+        # (cartons at the back of the odd rows, loose stock at the front of the even rows) and never in the
+        # strip behind the first row, so every aisle and every rack face keeps >= 0.9 m for the 0.76 m capsule.
+        # (Stock thrown anywhere between the racks - a trash bag or a suitcase across an aisle - shut off whole
+        # aisles.)  An archive keeps its filing cabinets along the -y wall: the racks start further in.
+        r0 = 1.8 if ("ARCHIVE" in name.upper() and door_side in ("-x", "+x")) else 1.2
+        n_rows = max(2, int((d - 3.4 - (r0 - 1.2)) / 2.0) + 1)
+        stock = {"SM_Int_Box": (0.2, 0.27), "SM_Int_Suitcase": (0.81, 0.13), "SM_Int_Bucket": (0.11, 0.1),
+                 "SM_Int_TrashBag": (0.27, 0.24)}       # footprint half sizes (x, y) of the catalog props
+
+        ni = min(7, int((xb - xa) / 1.15))
+        row_x = (xa + 0.04, xa + 0.6 + (ni - 1) * 1.15 + 0.56)        # x span of a row of racks
+
+        def against(prop, x, ry, yaw):
+            """Stand a floor item squarely against the +y face of the rack row at ry, inside the row's span."""
+            hx, hy = stock[prop]
+            a = math.radians(yaw)
+            ex, ey = hx * abs(math.cos(a)) + hy * abs(math.sin(a)), hx * abs(math.sin(a)) + hy * abs(math.cos(a))
+            C.prop(prop, min(max(x, row_x[0] + ex), row_x[1] - ex), ry + 0.28 + ey, z, yaw)
+        nl = 0
         for j in range(n_rows):
-            for i in range(min(7, int((xb - xa) / 1.15))):
-                shelf_prop(C, "SM_Int_SteelShelves", xa + 0.6 + i * 1.15, y0 + 1.2 + j * 2.0, 0.0 if j % 2 else 180.0,
+            ry = y0 + r0 + j * 2.0
+            for i in range(ni):
+                rx = xa + 0.6 + i * 1.15
+                shelf_prop(C, "SM_Int_SteelShelves", rx, ry, 0.0 if j % 2 else 180.0,
                            seed * 7 + j * 5 + i, z=z, fill=0.7, kind="store")
-                if (i + j) % 3 == 0:
-                    C.prop("SM_Int_Box", xa + 0.6 + i * 1.15, y0 + 1.2 + j * 2.0 + (0.6 if j % 2 else -0.6), z, i * 17.0)
+                if j % 2 and (i + j) % 3 == 0:          # carton at the back of the rack, short side out
+                    against("SM_Int_Box", rx, ry, 90.0 + rnd.uniform(-6.0, 6.0))
+                elif j % 2 == 0 and (i + j) % 3 == 1:   # loose stock at its front, long side along the aisle
+                    prop = ("SM_Int_Suitcase", "SM_Int_TrashBag", "SM_Int_Bucket", "SM_Int_Box")[nl % 4]
+                    against(prop, rx + rnd.uniform(-0.2, 0.2), ry,
+                            (90.0 if prop == "SM_Int_Box" else 0.0) + rnd.uniform(-6.0, 6.0))
+                    nl += 1
         C.prop("SM_Int_Ladder", xb - 0.6, y1 - 0.4, z, 0.0)
         C.prop("SM_Int_Box", xa + 0.2, y1 - 0.4, z, 15.0)
     zc_ = zc or z + 3.3
@@ -3985,10 +4015,6 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
             px, py = ((u, y0 + 0.3) if wall == "-y" else (u, y1 - 0.3) if wall == "+y"
                       else (x0 + 0.3, u) if wall == "-x" else (x1 - 0.3, u))
             C.prop("SM_Int_Drawers", px, py, z, {"-y": 180.0, "+y": 0.0, "-x": 90.0, "+x": -90.0}[wall])
-    if kind == "store":       # loose stock on the floor between the racks
-        for k in range(int(w * d / 12)):
-            C.prop(("SM_Int_Box", "SM_Int_Suitcase", "SM_Int_Bucket", "SM_Int_TrashBag")[k % 4],
-                   xa + rnd.uniform(0.3, xb - xa - 0.3), y0 + 0.5 + (k * 1.37) % (d - 1.0), z, rnd.uniform(0, 360))
     C.npc(cx, cy, 0.0, ("slifer", "ra", "obelisk", "white")[seed % 4], 1.0, z=z)
     C.cam(cam, (x1 - 0.6 if dw < 0 else x0 + 0.6, y1 - 0.6, z + 1.65), (cx, y0 + 0.8, z + 0.8), 17)
 
@@ -4663,7 +4689,8 @@ def _annex_interior(C):
     room_base(C, x0, ya, -15.15, yb, 108, "office", win="-x", wl=wins(ANX_WIN_S, ya, yb), lights=(1, 2), grid=None)
     for k, x in enumerate((-18.85, -17.65, -16.45)):
         shelf_prop(C, "SM_Int_SteelShelves", x, ya + 0.27, 180.0, 180 + k, kind="store")
-        shelf_prop(C, "SM_Int_SteelShelves", x, 57.6, 0.0 if k % 2 else 180.0, 183 + k, kind="store")
+        if k < 2:   # the free-standing row stops ~1.9 m short of the partition: the way round it to the back racks
+            shelf_prop(C, "SM_Int_SteelShelves", x, 57.6, 0.0 if k % 2 else 180.0, 183 + k, kind="store")
     C.prop("SM_Int_Drawers", -15.45 - 0.0, 59.0, z, -90.0)
     C.prop("SM_Int_Box", -18.6, 61.6, z, 15.0)
     C.prop("SM_Int_Ladder", -17.0, 62.1, z, 0.0)
