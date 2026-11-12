@@ -393,7 +393,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "9ddc5a3fe14f0f62"
+  "sig": "d99b87d687c71918"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_NoCol.fbx",
@@ -402,7 +402,7 @@
   "collision": "none",
   "nanite": false,
   "category": "location",
-  "sig": "30ad6367f2a3732a"
+  "sig": "ea47c336f0cd017f"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Interior.fbx",
@@ -447,7 +447,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "11578a5903eed6cb"
+  "sig": "73bc3c9050ce46fe"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Quay.fbx",
@@ -2508,7 +2508,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "7a89f5ddf1e999c7"
+  "sig": "57ffdb5e23b1b1c6"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_obelisk.fbx",
@@ -2517,7 +2517,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "546d5f2d7c3c1ea8"
+  "sig": "b4d338b2ca6b1a48"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_girls.fbx",
@@ -2526,7 +2526,16 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "479619f01e50c5f7"
+  "sig": "fbd6efbb08dbd341"
+ },
+ {
+  "file": "Meshes/Roads/SM_Road_girls_jetty.fbx",
+  "name": "SM_Road_girls_jetty",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "9675af9e5689b0ef"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_gym.fbx",
