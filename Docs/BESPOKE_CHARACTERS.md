@@ -94,7 +94,7 @@ What made the difference on the protagonists - `bespoke.check()` enforces the ha
 - **Long hair and accents.** An accent under-layer reads on short cuts; on long back hair it shows as
   patches - keep the accent to the tail and to short locks at the ears (a long copper side lock shows
   through the back hair as torn patches at the shoulders).
-- **Budget.** A bespoke character is ~130-180k triangles and 11-13 materials (the regular cast ~50-80k, 9):
+- **Budget.** A bespoke character is ~175-200k triangles and 13 materials (the regular cast ~50-80k, 9):
   the double-resolution hair is most of it.
 
 ## Still to do for real parity
