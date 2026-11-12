@@ -63,6 +63,13 @@ class FabPropsTests(unittest.TestCase):
         self.assertAlmostEqual(item[2], round(-asset["bottom"] * scale * 100.0, 1), places=1)
         self.assertAlmostEqual(item[4], round(scale, 3), places=3)
 
+    def test_translate_keeps_a_boulders_lean(self) -> None:
+        groups, _ = fab_props.translate({
+            "SM_Rock_A": dict(items=[[0.0, 0.0, 0.0, 30.0, 1.0, 12.5, -4.0], [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]]),
+        })
+        items = [it for g in groups.values() for it in g["items"]]
+        self.assertEqual(sorted(tuple(it[5:]) for it in items), [(0.0, 0.0), (12.5, -4.0)])
+
     def test_rotation_offset_is_carried(self) -> None:
         groups, _ = fab_props.translate({
             "SM_LampPost": dict(items=[[0.0, 0.0, 0.0, 0.0, 1.0]]),

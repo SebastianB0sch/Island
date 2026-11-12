@@ -153,7 +153,7 @@ def translate(groups: dict) -> tuple[dict, dict]:
     """Translate native instance groups into Fab instance groups.
 
     ``groups`` is the level writer's native map:
-        native name -> {items: [[x_cm, y_cm, z_cm, yaw_ue, scale], ...], ...}
+        native name -> {items: [[x_cm, y_cm, z_cm, yaw_ue, scale(, pitch, roll)], ...], ...}
     The native group's collision / cull / shadow / folder flags are preserved.
     Returns ``(fab name -> group dict, native name -> stats dict)``.  Variants
     are assigned round-robin per native group, so the result is deterministic.
@@ -199,7 +199,7 @@ def translate(groups: dict) -> tuple[dict, dict]:
                 if rot:
                     fab_group["rot"] = [float(v) for v in rot]
                 out[fab_name] = fab_group
-            fab_group["items"].append([item[0], item[1], round(z_cm, 1), item[3], round(scale, 3)])
+            fab_group["items"].append([item[0], item[1], round(z_cm, 1), item[3], round(scale, 3)] + list(item[5:7]))
             count += 1
         stats[native_name] = dict(target=target, variants=list(variants), count=count)
     return out, stats

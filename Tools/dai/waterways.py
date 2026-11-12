@@ -128,6 +128,11 @@ def clearance(x, y):
     return float(_edge_field()(x, y))
 
 
+def clearances(x, y):
+    """clearance() for arrays of points."""
+    return np.asarray(_edge_field()(x, y), np.float64)
+
+
 def water_level(x, y):
     """Water surface height at (x, y), or None on dry ground (sea 0, lake, river)."""
     _edge_field()

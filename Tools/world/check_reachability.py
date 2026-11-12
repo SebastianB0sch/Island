@@ -128,7 +128,8 @@ class World:
             mesh = g.get("mesh", name)
             if not g.get("collision") or mesh not in self.assets or g.get("rot"):
                 continue
-            items = np.asarray(g["items"], np.float64).reshape(-1, 5)
+            # [x, y, z, yaw, scale(, pitch, roll)]: a boulder's lean into its slope is ignored here
+            items = np.asarray([it[:5] for it in g["items"]], np.float64).reshape(-1, 5)
             if len(items):
                 self.props.append((mesh, items))
 

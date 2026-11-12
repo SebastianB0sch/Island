@@ -433,7 +433,10 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 * Procedural on-foot sound: footsteps follow the actual gait contacts and change with the ground
   (grass, dirt, gravel, sand, stone, wood, metal, carpet), with wading splashes, swim strokes,
   jump/landing impacts, clothing rustle, breathing and wind. No sample assets are used.
-* ~90 000 instanced trees, palms, bushes, ferns, flowers and rocks (Nanite).
+* ~140 000 instanced trees, palms, bushes, ferns, flowers, grass and rocks (Nanite), every one seated on the
+  ground under its whole footprint: trunks never grow through each other, boulders are bedded into their slope
+  instead of hovering over it, grass grows in swathes and tussocks and flowers in drifts
+  ([Docs/World/VEGETATION.md](Docs/World/VEGETATION.md)).
 
 ### Controls
 
@@ -544,6 +547,8 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/placement.py          standing-room checks (person capsules), NPC settling + stroll routes, arrival points
   dai/layout.py             places everything (bridges, roadside and waterside dressing, boats, birds),
                             scatters vegetation, writes layout.json
+  dai/groundfit.py          seats scattered instances on the terrain under their whole footprint, beds rocks
+                            into slopes, keeps trunks / crowns / boulders apart (Docs/World/VEGETATION.md)
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
   dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
@@ -586,7 +591,7 @@ DuelAcademyIsland/          the Unreal Engine 5.8 project
   registered falls back to the procedural version, so the build never breaks on a missing asset.
 * **Unreal side**: no binary assets are committed. `init_unreal.py` registers the menu; the build script
   creates master materials node-by-node (terrain splat blend, single-layer water, hologram, smoke, lava,
-  foliage wind …), imports meshes/textures/sounds and spawns ~1 500 actors + ~90 000 instances.
+  foliage wind …), imports meshes/textures/sounds and spawns ~1 500 actors + ~140 000 instances.
   Input actions, HUD and effects are created in C++ at runtime, so nothing depends on hand-made assets.
 
 ### Regenerating / customising the island (optional)

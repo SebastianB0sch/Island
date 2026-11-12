@@ -36,11 +36,22 @@ SOFT_PROPS = {"SM_GrassClump_A", "SM_Fern_A", "SM_FlowerBush_Red", "SM_FlowerBus
 
 
 # --------------------------------------------------------------------------- prop boxes
+def _trunk_spec(name, P):
+    """The registry entry of a third-party tree whose collision is its trunk column, else None."""
+    if not P.is_thirdparty(name):
+        return None
+    from . import thirdparty
+    spec = thirdparty.registry()["props"][name]
+    return spec if spec.get("collision") == "trunk" else None
+
+
 def prop_bounds(names, log=print):
     """Local AABB (min, max) per catalog prop, cached in .cache/prop_bounds.json (rebuilt when the prop
-    sources change)."""
+    sources change). A tree is its trunk, as in the game (its collision is the trunk column): people stand
+    and walk under its crown."""
     from .assets import props as P
     src = [os.path.join(C.TOOLS_DIR, "dai", "assets", f) for f in ("props.py", "furniture.py")]
+    src.append(os.path.abspath(__file__))
     src += [os.path.join(C.TOOLS_DIR, "thirdparty", "registry", f) for f in os.listdir(
         os.path.join(C.TOOLS_DIR, "thirdparty", "registry")) if f.endswith(".json")]
     stamp = max(os.path.getmtime(p) for p in src if os.path.exists(p))
@@ -62,6 +73,10 @@ def prop_bounds(names, log=print):
                     vs += [ch.matrix_parent_inverse @ v.co for v in ch.data.vertices]
             if vs:
                 cache[n] = [[min(v[i] for v in vs) for i in range(3)], [max(v[i] for v in vs) for i in range(3)]]
+                spec = _trunk_spec(n, P)
+                if spec is not None:
+                    r, z0, z1 = spec.get("trunk_radius", 0.3), cache[n][0][2], cache[n][1][2]
+                    cache[n] = [[-r, -r, z0], [r, r, z0 + spec.get("trunk_height", (z1 - z0) * 0.55)]]
             me = o.data if o.type == "MESH" else None
             bpy.data.objects.remove(o, do_unlink=True)
             if me is not None and me.users == 0:

@@ -66,6 +66,11 @@ class FabNatureTests(unittest.TestCase):
         self.assertFalse(groups[first]["shadow"])
         self.assertEqual(groups[first]["cull"], [3000, 6000])
 
+    def test_translate_keeps_a_plants_lean(self) -> None:
+        groups, _ = fab_nature.translate({"SM_Fern_A": [[0.0, 0.0, 0.0, 10.0, 1.0, 6.0, 3.5]]})
+        item = next(iter(groups.values()))["items"][0]
+        self.assertEqual(item[5:], [6.0, 3.5])
+
     def test_variants_are_round_robin_and_groups_merge(self) -> None:
         variants = fab_nature.REPLACE["SM_BroadTree_B"]["variants"]
         self.assertEqual(len(variants), 2)

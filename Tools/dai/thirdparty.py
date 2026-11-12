@@ -212,6 +212,12 @@ def _normalise(obj, spec):
         s = spec["scale"]
     if spec.get("origin", "base") == "base":
         off = Vector((-(mn[0] + mx[0]) / 2, -(mn[1] + mx[1]) / 2, -mn[2] + spec.get("z_offset", 0.0)))
+    elif spec["origin"] == "trunk":  # trees: pivot where the trunk meets the ground, not under the crown's
+        # bounding-box centre (a leaning palm's foot is metres off it) - so the tree stands where it is placed,
+        # its collision cylinder wraps the trunk and the ground fit samples the ground under the real foot
+        foot = co[co[:, 2] < mn[2] + 0.04 * (mx[2] - mn[2])]
+        cx, cy = np.median(foot[:, 0]), np.median(foot[:, 1])
+        off = Vector((-cx, -cy, -mn[2] + spec.get("z_offset", 0.0)))
     elif spec["origin"] == "wall":  # wall-hung props: back face on the pivot plane (+Y = wall)
         off = Vector((-(mn[0] + mx[0]) / 2, -mx[1], -mn[2] + spec.get("z_offset", 0.0)))
     elif spec["origin"] == "top":   # ceiling fixtures: origin at the top centre, hanging down -Z
