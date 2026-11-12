@@ -1,5 +1,6 @@
 {
  "player": "hero",
+ "player_female": "heroine",
  "groups": {
   "VroidC": {
    "skeleton_mesh": "SK_Anime_Hero",
@@ -606,6 +607,33 @@
     "M_Anime_StudentF1_HairTint"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_StudentF1.fbx"
+  },
+  "heroine": {
+   "name": "SK_Anime_Heroine",
+   "group": "VroidA",
+   "display": "Student",
+   "dorm": "slifer",
+   "scale": 1.052,
+   "tint": [
+    "jacket"
+   ],
+   "female": true,
+   "materials": [
+    "M_Anime_Heroine_FaceParts",
+    "M_Anime_VroidA_F00_000_00_Face_00_SKIN",
+    "M_Anime_OutlineSkin",
+    "M_Anime_VroidA_F00_000_00_Body_00_SKIN",
+    "M_Anime_Heroine_F00_001_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Heroine_Cloth",
+    "M_Anime_Heroine_JacketTint",
+    "M_Anime_Heroine_Hair",
+    "M_Anime_Heroine_Tie",
+    "M_Anime_Heroine_HairLine",
+    "M_Anime_Heroine_EarringMetal",
+    "M_Anime_Heroine_EarringStone"
+   ],
+   "file": "Meshes/Characters/Anime/SK_Anime_Heroine.fbx"
   },
   "mindy": {
    "name": "SK_Anime_Mindy",
@@ -1886,6 +1914,317 @@
    "cel": "cloth"
   },
   "M_Anime_Hero_Tie": {
+   "kind": "cel",
+   "color": [
+    0.8,
+    0.16,
+    0.18
+   ],
+   "rough": 0.7,
+   "fill": 0.45,
+   "cel": "cloth",
+   "color_linear": [
+    0.6038273388553378,
+    0.021980947079887205,
+    0.027211780951381357
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.66,
+    0.67,
+    0.84
+   ],
+   "rim": 0.15,
+   "spec": 0.0,
+   "threshold2": 0.2,
+   "shadow2": [
+    0.48,
+    0.5,
+    0.71
+   ]
+  },
+  "M_Anime_Heroine_Cloth": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Heroine/T_Anime_Heroine_Cloth",
+   "cel": "cloth",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.66,
+    0.67,
+    0.84
+   ],
+   "rim": 0.15,
+   "spec": 0.0,
+   "threshold2": 0.2,
+   "shadow2": [
+    0.48,
+    0.5,
+    0.71
+   ]
+  },
+  "M_Anime_Heroine_EarringMetal": {
+   "kind": "cel",
+   "color": [
+    0.9,
+    0.72,
+    0.3
+   ],
+   "rough": 0.6,
+   "fill": 0.45,
+   "color_linear": [
+    0.7874122893956174,
+    0.47699978456654196,
+    0.07323895587840543
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.66,
+    0.67,
+    0.84
+   ],
+   "rim": 0.15,
+   "spec": 0.0,
+   "threshold2": 0.2,
+   "shadow2": [
+    0.48,
+    0.5,
+    0.71
+   ],
+   "cel": "cloth"
+  },
+  "M_Anime_Heroine_EarringStone": {
+   "kind": "cel",
+   "color": [
+    0.8,
+    0.16,
+    0.18
+   ],
+   "rough": 0.6,
+   "fill": 0.45,
+   "color_linear": [
+    0.6038273388553378,
+    0.021980947079887205,
+    0.027211780951381357
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.66,
+    0.67,
+    0.84
+   ],
+   "rim": 0.15,
+   "spec": 0.0,
+   "threshold2": 0.2,
+   "shadow2": [
+    0.48,
+    0.5,
+    0.71
+   ],
+   "cel": "cloth"
+  },
+  "M_Anime_Heroine_F00_001_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_001_01_Shoes_01_CLOTH",
+   "base": "Characters/Heroine/T_Heroine_F00_001_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.66,
+    0.67,
+    0.84
+   ],
+   "rim": 0.15,
+   "spec": 0.0,
+   "threshold2": 0.2,
+   "shadow2": [
+    0.48,
+    0.5,
+    0.71
+   ],
+   "cel": "cloth"
+  },
+  "M_Anime_Heroine_FaceParts": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Heroine/T_Heroine_FaceParts",
+   "masked": true,
+   "cel": "flat",
+   "source_material": "FaceParts",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0
+  },
+  "M_Anime_Heroine_Hair": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "ring": 0.0,
+   "base": "Characters/Heroine/T_Anime_Heroine_Hair",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.6,
+    0.76
+   ],
+   "rim": 0.16,
+   "spec": 0.0,
+   "threshold2": 0.18,
+   "shadow2": [
+    0.44,
+    0.43,
+    0.62
+   ],
+   "cel": "hair"
+  },
+  "M_Anime_Heroine_HairLine": {
+   "kind": "outline",
+   "color": [
+    0.03735,
+    0.04148999999999999,
+    0.0684
+   ],
+   "color_linear": [
+    0.0028908668730650154,
+    0.0032133026503909637,
+    0.00579896490127902
+   ],
+   "rough": 0.8,
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Heroine_JacketTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Heroine/T_Anime_Heroine_JacketTint",
+   "cel": "cloth",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.66,
+    0.67,
+    0.84
+   ],
+   "rim": 0.15,
+   "spec": 0.0,
+   "threshold2": 0.2,
+   "shadow2": [
+    0.48,
+    0.5,
+    0.71
+   ]
+  },
+  "M_Anime_Heroine_Tie": {
    "kind": "cel",
    "color": [
     0.8,

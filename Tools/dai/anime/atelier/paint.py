@@ -460,7 +460,7 @@ class Atlas:
     def paint(self, rect, color, **style):
         """Fill a rectangle. style: hem / top (v-bands at the bottom / top: [(width, colour)]), edge (u-bands
         at both u ends: [(width, colour)]), stripes dict(n, width, color, axis), gradient (colour, start,
-        end) towards v = 0, motif dict(kind, n, v, size, color, h), fold (0..1 soft vertical fold shading);
+        end) towards v = 0, motif dict(kind, n, v, size, color, h), crest dict(u, v, size, color), fold (0..1 soft vertical fold shading);
         plus the tailoring keys of _detail() above (seams, pockets, lapel, pleats, shade, folds, ...)."""
         x, y, w, h = rect
         u = (np.arange(w, dtype=np.float32) + 0.5) / w
@@ -492,6 +492,17 @@ class Atlas:
             else:                                     # chevron
                 a = (np.abs(np.abs(cu) / m["size"] + cv) < 0.35) & (np.abs(cu) < m["size"])
             _over(img, m["color"], a.astype(np.float32))
+        cr = style.get("crest")
+        if cr:
+            # a large emblem painted on the garment (e.g. the back of a coat): diamond outline, inner diamond,
+            # side wings; u, v: centre, size: half height in v
+            du, dv = (U - cr["u"]) * w, (V - cr["v"]) * h
+            sz = cr["size"] * h
+            m = (np.abs(du) + np.abs(dv)) / sz
+            a = ((m > 0.80) & (m < 1.0)) | (m < 0.40)
+            a |= (np.abs(dv) < 0.05 * sz) & (np.abs(du) > 1.15 * sz) & (np.abs(du) < 2.1 * sz - np.abs(dv) * 4)
+            a |= (np.abs(du) < 0.05 * sz) & (np.abs(dv) > 1.15 * sz) & (np.abs(dv) < 1.6 * sz)
+            _over(img, cr["color"], a.astype(np.float32) * cr.get("alpha", 1.0))
         pos = 0.0
         for width, col in style.get("hem", ()):
             _over(img, col, ((V >= pos) & (V < pos + width)).astype(np.float32))

@@ -170,6 +170,29 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Camera")
 	bool IsIndoors() const { return bIndoors; }
 
+	/** The protagonists' bespoke models (Tools/dai/anime/hero.py): the profile's gender picks one at BeginPlay.
+	 *  Scales are cast.scale_of() of the two cast entries (172 cm / 163 cm). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Avatar")
+	FString HeroCastMesh = TEXT("SK_Anime_Hero");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Avatar")
+	FString HeroAnimGroup = TEXT("VroidC");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Avatar")
+	float HeroScale = 0.987f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Avatar")
+	FString HeroineCastMesh = TEXT("SK_Anime_Heroine");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Avatar")
+	FString HeroineAnimGroup = TEXT("VroidA");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Avatar")
+	float HeroineScale = 1.052f;
+
+	/** True for the profile genders that select the heroine ("female", "f", "woman", "girl"; any case). */
+	static bool IsHeroineGender(const FString& Gender);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<USpringArmComponent> CameraBoom;

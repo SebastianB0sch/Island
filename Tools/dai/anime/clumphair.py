@@ -315,9 +315,9 @@ def build(arm, meshes, entry, key, log=print):
     hr.split = accent is not None
     hr.res = int(opt.get("res", 1))
     HR.style(hr, sections, mat)
-    if opt.get("author") == "hero":
-        from . import hero                  # the protagonist's hand-placed cut (hero.py)
-        hero.comb(hr)
+    if opt.get("author"):
+        from . import bespoke, hero         # a bespoke design's hand-placed locks (bespoke.py / hero.py)
+        bespoke.comb(hr, hero.DESIGNS[opt["author"]])
     parts, bones = hr.build(mat, key, cap_line=opt.get("cap", (0.27, 0.50, 0.74)), tie_mat=tie_mat,
                             min_chain=opt.get("min_chain", 0.085))
     AB.ensure_bones(arm, bones)

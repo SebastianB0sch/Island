@@ -15,6 +15,8 @@
 #include "DALocationVolume.h"
 #include "DAMotorcycleComponent.h"
 #include "DAMovementAudioComponent.h"
+#include "DAProfileSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
@@ -82,8 +84,11 @@ ADAStudentCharacter::ADAStudentCharacter()
 	Avatar = CreateDefaultSubobject<UDAAvatarComponent>(TEXT("Avatar"));
 	Avatar->SetupAttachment(GetCapsuleComponent());
 	Avatar->SetRelativeLocation(AvatarOnFoot);
-	// The protagonist's own bespoke model (Tools/dai/anime/hero.py); its jacket keeps the dorm tint.
-	Avatar->CastMesh = TEXT("SK_Anime_Hero");
+	// The protagonist's own bespoke model (Tools/dai/anime/hero.py); its coat keeps the dorm tint. BeginPlay
+	// switches to the heroine when the profile says so.
+	Avatar->CastMesh = HeroCastMesh;
+	Avatar->AnimGroup = HeroAnimGroup;
+	Avatar->BodyScale = HeroScale;
 
 	Bike = CreateDefaultSubobject<UDAMotorcycleComponent>(TEXT("Motorcycle"));
 	Bike->SetupAttachment(GetCapsuleComponent());
@@ -98,8 +103,26 @@ ADAStudentCharacter::ADAStudentCharacter()
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+bool ADAStudentCharacter::IsHeroineGender(const FString& Gender)
+{
+	const FString G = Gender.TrimStartAndEnd().ToLower();
+	return G == TEXT("female") || G == TEXT("f") || G == TEXT("woman") || G == TEXT("girl");
+}
+
 void ADAStudentCharacter::BeginPlay()
 {
+	// Pick the protagonist's model before the avatar component sets itself up (its BeginPlay runs inside
+	// Super::BeginPlay). The avatar falls back to SK_Anime_StudentM1 when the mesh is not imported.
+	if (Avatar)
+	{
+		const UGameInstance* GameInstance = GetWorld() ? GetWorld()->GetGameInstance() : nullptr;
+		const UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+		const bool bHeroine = Profile && IsHeroineGender(Profile->GetGender());
+		Avatar->CastMesh = bHeroine ? HeroineCastMesh : HeroCastMesh;
+		Avatar->AnimGroup = bHeroine ? HeroineAnimGroup : HeroAnimGroup;
+		Avatar->BodyScale = bHeroine ? HeroineScale : HeroScale;
+		Avatar->FallbackCastMesh = bHeroine ? TEXT("SK_Anime_StudentF1") : TEXT("SK_Anime_StudentM1");
+	}
 	Super::BeginPlay();
 	CreateInput();
 	AddMappingContext();

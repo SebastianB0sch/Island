@@ -18,23 +18,29 @@ than garments tailored onto the bases, so tailoring is used sparingly.
 
 Models from other games are not an option: they are those studios' property.
 
-## The protagonist (`hero`)
+## The protagonists (`hero`, `heroine`)
 
-The player character is not a preset look: `Tools/dai/anime/hero.py` authors it piece by piece as an original
-design on the boys' VRoid base (cast id `hero`, mesh `SK_Anime_Hero`, `cast.PLAYER`). The generic male students
-keep `student_m1`, so the island's background students never wear the hero's look.
+The player character is not a preset look: both protagonists are original *bespoke* designs, written lock by
+lock and garment by garment as data in `Tools/dai/anime/hero.py` and built by the template engine
+`Tools/dai/anime/bespoke.py` - the template every future character at this level starts from (see
+[BESPOKE_CHARACTERS.md](BESPOKE_CHARACTERS.md) for the workflow, the data format and the learnings). The hero
+(`SK_Anime_Hero`, boys' base, `cast.PLAYER`) and the heroine (`SK_Anime_Heroine`, girls' base,
+`cast.PLAYER_FEMALE`) are a pair; the profile's gender picks one in game (`ADAStudentCharacter::BeginPlay`). The
+generic students keep `student_m1` / `f1` / `f2`, so the background students never wear the protagonists' looks.
 
 | Part | What is bespoke |
 |---|---|
-| Hair | `hero.comb()` places every lock by hand: a side-parted fringe with one long lock between the eyes, face-framing locks, a lifted piecey crown, flicked sides, a copper-dyed under-layer that shows at the ends, a nape tail with a red cord, an ahoge. Built at twice the usual geometric resolution (`res=2`), with a cool highlight ring (`sheen`) and short spring chains on the side and back locks (`min_chain`) |
-| Face | `hero.repaint()` replaces the base face's sheets while they are packed into the face-parts atlas: a layered amber iris (lid shadow, gradient body, radial fibres, collarette, inner reflection, limbal ring), two catch-lights, a heavier ink lash line, brows in the hair colour; a sharper jaw, a serious resting expression, gold hoop earrings |
-| Outfit | a dorm-tinted academy coat with one sleeve (`top(sleeve_sides=("l",))`), a cut-away hem (`top(hem_front=...)`: short at the front, long tails on the coat-tail chains), ink piping, a copper lining edge and a gold card-suit border (`motif`), over a fitted black high-collar top. Hardware from the new garments `strap` (a leather strap across the chest with a buckle and card pouch), `legstrap` (thigh strap with a pouch) and `bracer` (an armoured duel-disk guard with a lit ring on the bare forearm), plus a belt stack, fingerless gloves, an arm band, boots |
+| Hair | every lock placed by hand (`bespoke.comb()`): the hero's side-parted fringe with one long lock between the eyes, a lifted piecey crown, flicked sides and a nape tail; the heroine's long layered cut parted the other way, half up with a tail at the crown and long face-framing locks. Blue-black with a copper under-layer, double geometric resolution (`res=2`), a cool highlight ring, spring chains on the short locks |
+| Face | `bespoke.repaint_for()` replaces the base face's sheets while they are packed into the face-parts atlas: a layered amber iris (copper-ringed with an extra sparkle on the heroine), catch-lights, an inked lash line, brows in the hair colour; jaw / chin, resting expression, gold hoop earrings |
+| Outfit | a dorm-tinted academy coat with one sleeve (mirrored between the two), a cut-away hem with long tails, a gold card-suit border, a copper lining edge and a crest on the back, over a fitted black high-collar top; a leather strap over the shoulder with a buckle and a card pouch, a belt stack, a thigh strap, fingerless gloves and an armoured duel-disk bracer on the bare forearm. The hero wears tapered trousers, the heroine a pleated skirt and thigh-highs |
 
-![The protagonist in the Slifer, Ra and Obelisk jacket colours](renders/hero.jpg)
+![The protagonists](renders/protagonists.jpg)
 
-The jacket keeps the `JacketTint` slot, so the dorm switch still recolours it; the hair has no tint slot. In
-Unreal the player's avatar asks for `SK_Anime_Hero` and falls back to `SK_Anime_StudentM1`
-(`UDAAvatarComponent::FallbackCastMesh`) until the new mesh is imported.
+Both coats keep the `JacketTint` slot, so the dorm switch still recolours them; the hair has no tint slot. In
+Unreal the player's avatar asks for `SK_Anime_Hero` / `SK_Anime_Heroine` (with skeleton group `VroidC` /
+`VroidA` and the cast scale) and falls back to `SK_Anime_StudentM1` / `SK_Anime_StudentF1`
+(`UDAAvatarComponent::FallbackCastMesh`) until the new meshes are imported. The choice is made once, at
+BeginPlay: a gender set later (character creation) takes effect on the next level load.
 
 ## Atelier designs
 

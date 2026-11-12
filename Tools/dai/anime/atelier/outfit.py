@@ -847,12 +847,8 @@ def _buckle(kit, at, normal, color, strap_color, size=(0.030, 0.026), name="buck
         kit.add(_box(name, np.asarray(at) + n * off, (sx, sy, sz), rot_z=rot).weights(M.w_spine), col, "cloth")
 
 
-def strap(kit, color, path, width=0.024, ease=0.012, thick=0.0035, buckles=(), buckle=(0.80, 0.82, 0.86),
-          pouch=None, style=None, name="strap"):
-    """Strap lying on the torso along `path` [(z, azimuth deg)] (0 = front centre, + = the character's left;
-    straps over the shoulder use z up to 1.43); buckles: fractions along it; pouch: (fraction, colour) of a
-    small pouch hanging from it."""
-    b = kit.body
+def _on_torso(b, path, ease):
+    """Points (K, 3) and outward normals of a [(z, azimuth deg)] path on the torso surface."""
     path = np.asarray(path, np.float64)
     seg = np.linspace(0.0, 1.0, len(path))
     t = np.linspace(0.0, 1.0, max(24, 12 * len(path)))
@@ -862,8 +858,35 @@ def strap(kit, color, path, width=0.024, ease=0.012, thick=0.0035, buckles=(), b
     Q[:, 2] = zs
     cy = np.array([b.centre_y(min(z, 1.405)) for z in zs])
     N = np.stack([Q[:, 0], Q[:, 1] - cy, np.zeros(len(Q))], axis=1)
-    N[:, 2] = np.clip(zs - 1.36, 0.0, None) * 6.0              # over the shoulder the strap faces up
+    N[:, 2] = np.clip(zs - 1.36, 0.0, None) * 6.0              # near the shoulder line the strap faces up
     N /= np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-12)
+    return Q, N
+
+
+def strap(kit, color, path, width=0.024, ease=0.012, thick=0.0035, buckles=(), buckle=(0.80, 0.82, 0.86),
+          pouch=None, style=None, name="strap", over=None, rise=0.040):
+    """Strap lying on the torso along `path` [(z, azimuth deg)] (0 = front centre, + = the character's left;
+    straps over the shoulder start at z ~1.425); buckles: fractions along it; pouch: (fraction, colour) of a
+    small pouch hanging from it; over: the back half's path (from the shoulder down) - the strap then runs
+    over the shoulder, `rise` metres above the shoulder line, as one piece."""
+    b = kit.body
+    Q, N = _on_torso(b, path, ease)
+    if over is not None:
+        Qb, Nb = _on_torso(b, over, ease)
+        nf = len(Q)
+        front_i = lambda f: nf - 1 - int(round(f * (nf - 1)))      # index along the front half, after reversing
+        p0, p2 = Q[0], Qb[0]
+        p1 = 0.5 * (p0 + p2) + np.array([0.0, 0.0, rise])
+        s = np.linspace(0.0, 1.0, 12)[1:-1, None]
+        bridge = (1 - s) ** 2 * p0 + 2 * (1 - s) * s * p1 + s ** 2 * p2
+        up = np.array([0.0, 0.0, 1.0])
+        nb = np.array([_n / np.linalg.norm(_n) for _n in (up * 0.8 + (1 - s) * N[0] * 0.4 + s * Nb[0] * 0.4)])
+        Q = np.concatenate([Q[::-1], bridge, Qb])
+        N = np.concatenate([N[::-1], nb, Nb])
+        tot = len(Q) - 1
+        buckles = [front_i(f) / tot for f in buckles]
+        if pouch is not None:
+            pouch = (front_i(pouch[0]) / tot, pouch[1])
     st = dict(edge=[(0.10, P.shade(color, v=0.70))], stitch=[("u", 0.22, 0.0, 1.0), ("u", 0.78, 0.0, 1.0)])
     st.update(style or {})
     kit.add(_strap_part(name, Q, N, width, thick).weights(M.w_spine), color, "cloth", **st)

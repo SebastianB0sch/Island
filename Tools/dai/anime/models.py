@@ -776,8 +776,8 @@ def build_model(cid, entry, key_name, log=print):
     if face_obj is not None:
         repaint = None
         if entry.get("bespoke"):
-            from . import hero              # the protagonist's own eyes and brows
-            repaint = hero.repaint
+            from . import bespoke, hero     # a bespoke design's own eyes, lashes and brows
+            repaint = bespoke.repaint_for(hero.DESIGNS[entry["bespoke"]])
         merge_face_parts(key, face_obj, log, repaint=repaint)
         add_face_outline(face_obj, entry.get("outline", 0.0022) * 0.8, log)
     if hidden_skin is not None:

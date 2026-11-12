@@ -384,9 +384,10 @@ for _cid, _wear in WEAR.items():
     LOOKS[_cid]["wear"] = _wear
 
 
-# the protagonist: authored piece by piece in hero.py rather than from the presets above
-from . import hero as _hero  # noqa: E402
-LOOKS["hero"] = _hero.look()
+# the protagonists: bespoke designs (hero.py, written in the bespoke.py template) rather than the presets above
+from . import bespoke as _bespoke, hero as _hero  # noqa: E402
+for _cid, _design in _hero.DESIGNS.items():
+    LOOKS[_cid] = _bespoke.look(_design, _cid)
 
 
 def apply(cid, entry):

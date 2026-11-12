@@ -575,11 +575,36 @@ class AtelierCastTests(unittest.TestCase):
             for part in design.get("tint", ()):
                 self.assertIn(part, ("jacket", "hair"), key)
 
+    def test_bespoke_designs_follow_the_template(self) -> None:
+        from dai.anime import bespoke, cast, hero, looks
+        self.assertEqual(set(hero.DESIGNS), {cast.PLAYER, cast.PLAYER_FEMALE})
+        entries = cast.all_entries()
+        for cid, design in hero.DESIGNS.items():
+            self.assertEqual(bespoke.check(design), [], cid)
+            spec = looks.LOOKS[cid]
+            self.assertEqual(spec["bespoke"], cid)
+            self.assertEqual(spec["hair_style"]["author"], cid)
+            self.assertEqual(spec["model"], design["base"])
+            self.assertEqual(bool(spec["female"]), bool(design["female"]))
+            self.assertEqual(entries[cid]["height"], design["height"])
+            self.assertTrue(any(p.get("slot") == "tint" for _, p in spec["wear"]), cid)
+        self.assertTrue(entries["heroine"]["female"])
+        # the C++ player picks between the two with these scales (DAStudentCharacter.h)
+        import re
+        header = (REPO / "DuelAcademyIsland/Source/DuelAcademyIsland/Public/DAStudentCharacter.h").read_text()
+        for name, cid in (("HeroScale", "hero"), ("HeroineScale", "heroine")):
+            m = re.search(name + r" = ([0-9.]+)f;", header)
+            self.assertIsNotNone(m, name)
+            self.assertAlmostEqual(float(m.group(1)), entries[cid]["scale"], places=3)
+        # a lock that breaks a learning is reported
+        bad = dict(hero.HERO, hair=dict(hero.HERO["hair"], locks=[dict(az=20.0, s1=0.50, width=0.02, kind="fringe")]))
+        self.assertEqual(len(bespoke.check(bad)), 2)
+
     def test_player_is_the_bespoke_hero(self) -> None:
-        from dai.anime import cast, hero, looks
+        from dai.anime import cast, looks
         self.assertEqual(cast.PLAYER, "hero")
         spec = looks.LOOKS["hero"]
-        self.assertEqual(spec["bespoke"], hero.KEY)
+        self.assertEqual(spec["bespoke"], "hero")
         self.assertEqual(spec["tint"], ["jacket"])                     # dorm-tinted jacket, the hair is its own
         self.assertEqual(spec["hair_style"]["author"], "hero")
         tinted = [p for kind, p in spec["wear"] if p.get("slot") == "tint"]

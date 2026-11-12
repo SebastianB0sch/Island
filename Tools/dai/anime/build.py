@@ -967,7 +967,7 @@ def build(log=print, only=None):
             use_artist_model(e, model)
         g = key_name(model) if model else PROCEDURAL
         groups.setdefault(g, []).append(cid)
-    info = dict(player=CAST.PLAYER, groups={}, meshes={}, materials={})
+    info = dict(player=CAST.PLAYER, player_female=CAST.PLAYER_FEMALE, groups={}, meshes={}, materials={})
     used = set()
     for group, cids in groups.items():
         blend.reset_scene()
