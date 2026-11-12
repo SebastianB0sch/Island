@@ -4245,11 +4245,8 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
             px, py = ((u, y0 + 0.3) if wall == "-y" else (u, y1 - 0.3) if wall == "+y"
                       else (x0 + 0.3, u) if wall == "-x" else (x1 - 0.3, u))
             C.prop("SM_Int_Drawers", px, py, z, {"-y": 180.0, "+y": 0.0, "-x": 90.0, "+x": -90.0}[wall])
-    if kind == "store":       # loose stock on the floor between the racks
-        for k in range(int(w * d / 12)):
-            px, py, a_ = xa + rnd.uniform(0.3, xb - xa - 0.3), y0 + 0.5 + (k * 1.37) % (d - 1.0), rnd.uniform(0, 360)
-            if not in_door_zone(px, py, 0.3):
-                C.prop(("SM_Int_Box", "SM_Int_Suitcase", "SM_Int_Bucket", "SM_Int_TrashBag")[k % 4], px, py, z, a_)
+    # (no loose stock on the floor between the store racks: boxes and bags there closed the way round the racks
+    # to the back of the room for the player's capsule - Tools/world/check_reachability.py)
     C.npc_clear(mark, x0, y0, x1, y1, (cx, cy), 0.0, ("slifer", "ra", "obelisk", "white")[seed % 4], 1.0, z=z)
     C.cam(cam, (x1 - 0.6 if dw < 0 else x0 + 0.6, y1 - 0.6, z + 1.65), (cx, y0 + 0.8, z + 0.8), 17)
 
