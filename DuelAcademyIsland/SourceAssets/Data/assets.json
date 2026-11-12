@@ -1431,15 +1431,6 @@
   "sig": "66252f618bd528be"
  },
  {
-  "file": "Meshes/Doors/SM_Door_academy_220x440.fbx",
-  "name": "SM_Door_academy_220x440",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location",
-  "sig": "9ab9e98ea9553990"
- },
- {
   "file": "Meshes/Doors/SM_Door_academy_250x460.fbx",
   "name": "SM_Door_academy_250x460",
   "folder": "Doors",
@@ -1962,24 +1953,6 @@
   "sig": "133865f95fdd9fe9"
  },
  {
-  "file": "Meshes/Doors/SM_Door_ra_100x285.fbx",
-  "name": "SM_Door_ra_100x285",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location",
-  "sig": "5c6bbc6605ea48b2"
- },
- {
-  "file": "Meshes/Doors/SM_Door_ra_60x251.fbx",
-  "name": "SM_Door_ra_60x251",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location",
-  "sig": "f1299bf63905285b"
- },
- {
   "file": "Meshes/Doors/SM_Door_ra_70x265.fbx",
   "name": "SM_Door_ra_70x265",
   "folder": "Doors",
@@ -2052,15 +2025,6 @@
   "sig": "f40d90515e520781"
  },
  {
-  "file": "Meshes/Doors/SM_Door_slifer_80x255.fbx",
-  "name": "SM_Door_slifer_80x255",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location",
-  "sig": "fc09c497eb8d2f0a"
- },
- {
   "file": "Meshes/Doors/SM_Door_slifer_90x205.fbx",
   "name": "SM_Door_slifer_90x205",
   "folder": "Doors",
@@ -2068,24 +2032,6 @@
   "nanite": false,
   "category": "location",
   "sig": "15de509e38ad5e7e"
- },
- {
-  "file": "Meshes/Doors/SM_Door_slifer_inner_75x200.fbx",
-  "name": "SM_Door_slifer_inner_75x200",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location",
-  "sig": "71e22b072ee6a9f2"
- },
- {
-  "file": "Meshes/Doors/SM_Door_slifer_inner_90x210.fbx",
-  "name": "SM_Door_slifer_inner_90x210",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location",
-  "sig": "fcf5a6ab9ee72705"
  },
  {
   "file": "Meshes/Doors/SM_Door_wood_90x205.fbx",
@@ -4769,5 +4715,77 @@
   "collision": "none",
   "nanite": false,
   "category": "water"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_academy_140x290.fbx",
+  "name": "SM_Door_academy_140x290",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_academy_220x420.fbx",
+  "name": "SM_Door_academy_220x420",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_girls_104x260.fbx",
+  "name": "SM_Door_girls_104x260",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_ra_100x283.fbx",
+  "name": "SM_Door_ra_100x283",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_ra_70x251.fbx",
+  "name": "SM_Door_ra_70x251",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_ra_80x258.fbx",
+  "name": "SM_Door_ra_80x258",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_slifer_80x253.fbx",
+  "name": "SM_Door_slifer_80x253",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_slifer_inner_85x200.fbx",
+  "name": "SM_Door_slifer_inner_85x200",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_slifer_inner_90x208.fbx",
+  "name": "SM_Door_slifer_inner_90x208",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
  }
 ]

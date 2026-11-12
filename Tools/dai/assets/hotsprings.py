@@ -731,9 +731,10 @@ def _bath_interior(aset, mb, nc):
     aset.prop("SM_Int_Kettle", (PART_X - 0.65, -11.05, BFL + 0.75), 0.0)
     aset.prop("SM_Int_Register", (PART_X - 0.55, -10.35, BFL + 0.75), 0.0)
     mb.box((PART_X, by1 - 0.05, BFL + 2.45), (0.04, 0.04, 0.5), DARK)
-    nc.box((PART_X, -10.7, BFL + 2.3), (0.04, 1.2, 0.32), WOOD)
+    # (the sign hangs over the booth's front edge: over the attendant's seat it ran through the attendant's head)
+    nc.box((PART_X, -9.8, BFL + 2.3), (0.04, 1.2, 0.32), WOOD)
     for (dx, yaw) in ((-0.03, -90.0), (0.03, 90.0)):
-        aset.text("RECEPTION", (PART_X + dx, -10.7, BFL + 2.24), yaw, size=0.14, color=(0.2, 0.1, 0.05))
+        aset.text("RECEPTION", (PART_X + dx, -9.8, BFL + 2.24), yaw, size=0.14, color=(0.2, 0.1, 0.05))
     aset.text("Towel 100 DP - Coffee milk 120 DP", (PART_X - 0.62, -10.7, BFL + 1.12), -90.0, size=0.05,
               color=(0.2, 0.1, 0.05))
     aset.npc((PART_X, -10.8, BFL + 0.75), 0.0, "white", 0.0)

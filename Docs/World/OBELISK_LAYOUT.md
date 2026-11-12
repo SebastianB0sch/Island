@@ -14,7 +14,7 @@ the in-place palace (`Tools/dai/assets/obelisk.py`, `build_boys`) and the two Ob
 - the courtyard with the fountain and the gate.
 
 The girls' mansion shares the module's helpers. Shared fixes are listed under "Shared helpers"; the girls'
-mansion itself was not reviewed.
+mansion got its own pass afterwards (second part of this file).
 
 ## Check
 
@@ -160,8 +160,128 @@ faces. Between two runs on the same geometry a few of them come and go with the 
 **Academy re-check** (shared helpers changed): NPC spots 0, doors 0, paths 153 (the known leftovers; 154
 before), z-fighting 865 (882 before), back faces 25 (as before).
 
+## Regenerated assets
+
+`python Tools/build_island.py layout` was run after both passes (with the terrain caches rebuilt and
+`GLTF_TRANSFORM` pointing at a local `@gltf-transform/cli` for the student character). Committed: every location's
+meshes (`Meshes/Locations/*`, the Academy, Slifer, Ra and Obelisk passes and the shared-helper changes),
+the door meshes (new sizes; the 7 sizes no longer used are removed), `Data/layout.json`, `Data/assets.json`
+and the minimap. Not committed: the shared props (`Meshes/Props`) and the character files, which this pass did
+not change (the container lacked some third-party textures they are built from; their bytes differed only in
+export noise), and files whose only difference was the FBX time stamp.
+
+The people check of the layout stage moved the hot springs' reception attendant onto the booth's rail: the
+hanging RECEPTION sign ran through the attendant's head. The sign hangs over the booth's front edge now
+(`hotsprings.py`).
+
 Not done here:
-- Regenerate the FBXs and the level (`python Tools/build_island.py layout`, then the editor build).
-- The girls' mansion only got the shared-helper changes; its own layout was not reviewed (its spec check and
-  audit pass). Its two fireplaces call `K.fireplace` on wall points too and probably have the same surround-in-
-  the-wall fault.
+- The editor build (Unreal: Duel Academy > Build Island) to bring the regenerated FBXs into the level.
+
+# Obelisk Blue girls' mansion - 2026-11-11 (second part)
+
+The same pass for the girls' lakeside mansion (`build_girls`): the pavilion (foyer, music gallery, the
+drawing room and the ladies' salon over the porch, the second-floor hall, the attic studio and landing), the
+two wings (parlour, library, tea room, dining room; eight suites of sitting room + corner bedroom over two
+storeys; the wing attics with the maids' rooms and the box rooms), the four turrets with their lookout rooms,
+the conservatory, the garden with the gazebo and the jetty.
+
+```powershell
+python Tools/academy_check.py --location obelisk_girls   # (~8 min)
+```
+
+## What was wrong and what changed
+
+### Paths
+- **The second floor was unreachable** (ladies' salon, upper hall, the four upper suites, and so everything
+  above). The music gallery's ceiling rose hung over the light flight up its axis, 1.2 m above the treads.
+  It hangs beside the stairwell now.
+- **The attic storey was unreachable** (studio, landing, wing attics, maids' rooms, box rooms). Seven faults on
+  the way up:
+  - the second-floor hall's ceiling and a coffer beam closed the attic stairwell (as in the boys' palace); the
+    ceiling is open over the well;
+  - the flight ran along the hall's west wall, under the low side of the pavilion's gable roof: the last steps
+    had 1.6-1.75 m of headroom. The flight is 2 m wide, the runner in the middle under the higher roof;
+  - the floor hole ran 5 cm past the top step;
+  - the attic floor's plank seams were drawn across the stairwell, thin strips floating over the treads (and
+    taken for floor by the walk grid). Seams stop at floor holes (shared `_plank_seams`);
+  - **the main block's hip roof ran straight through the pavilion's attic**: its slopes crossed the studio and the
+    landing at head height (13.6-14.6 m by the front, a roof slab between the studio's rose window and the
+    rest of the room). The hip roof stops along the valleys where it meets the pavilion's gable roof, its eaves
+    at the pavilion's walls (`_hip_roof_walk` cuts);
+  - the pavilion's gable roof crossed the doors into the wing attics at knee height (its fascia, 0.45-0.75 m
+    above the floor) and its eaves stood 0.2 m into the wing attics along their whole length. The fascia is
+    open at the doors and the eaves end inside the walls. The openings in the gable roof for those doors were
+    open from the eave up to 15.45 m - from the landing you saw into the roof space; a flat-roofed recess
+    closes each;
+  - four suitcases stood in front of both doors into the east wing attic.
+- **Turret lookout rooms** (four): the spiral stairs were too tight for a person (0.70 m clear between the post
+  and the handrail's chords); they are 1.0 m in radius now and turned so that their top step points along the
+  curved wall. The telescope stood in the stair column and a floor cushion lay over the stairwell; they stand
+  beside it.
+- **Suites:** in all eight sitting rooms a bookcase stood in the doorway to the bedroom (the door was "walled
+  up"); it stands on the window side of the desk. In the corner bedrooms the writing desk and its chair closed
+  the passage to the bed's window side (its nightstand, and on the first floor the round east bay); the bed
+  stands 0.45 m further in (against the en-suite's partition, with one nightstand on the window side) and the
+  desk 0.5 m nearer the window, its chair tucked in.
+- **Box rooms:** the dust-sheeted furniture was not mirrored in the back rooms; one piece stood in the mouth of
+  the back dormer niche.
+- **Jetty:** reached over the lakeside slope, which is terrain and not part of the asset; the check seeds it on
+  its landing.
+
+### Doors
+- **Front and back entrance:** the pavilion's plinth ran across both doorways, a 30 cm curb in front of the
+  leaves. It stops at the door surrounds.
+- **Trim surrounds** (front, back, and the conservatory door into the garden hall): the leaves hung 15 cm proud,
+  in the middle of wall + surround as on the boys' stone surrounds; these surrounds are trim, so the leaves
+  hang in the wall's middle (`door(proud=...)`). The surround's head stood exactly at the leaf's top in its
+  outward swing; it stands 3.5 cm higher.
+- **Conservatory door:** 2.2 x 2.65 m in the 2.08 x 2.6 m clear opening between the glazing bars and under the
+  transom (`ALIGNMENT_AUDIT.md` #37 had sized it to the bay pitch); now 2.08 x 2.6 m.
+- **Studio | landing door:** the attic skirting and dado ran across it.
+- **Tea room door:** a bust's plinth in the corridor stood in the leaf's swing.
+
+### NPCs
+- Conservatory: in the tree; tea room and ladies' salon: on chairs at the tea tables. All three stand clear.
+
+### Walls and z-fighting
+- **Junction walls** between the pavilion and the wings (x +-7) ended in the facade plane at every storey, as in
+  the boys' palace; they stop at the main walls' inner faces, with corner pieces.
+- **The main block's cornice and string courses** ran on through the pavilion (the cornice inside the ladies'
+  salon over its ceiling); they stop at the pavilion.
+- **Rings** (plinth, bands, cornices; shared): their backs lay on the walls; left out.
+- **Bay floors** (the canted bays, the round east bay): the slab sides lay in the facet walls' outer faces, a
+  strip on the facade; the slabs are top and underside only.
+- **Wing attics' coffered ceilings** spanned the whole rooms, over the sloping ceilings too, and stood above the
+  roof by the eaves: the beams showed on the roof from outside. The flat ceilings stop where the slopes begin.
+- **Fireplaces** (parlour, drawing room): the surround lay in the wall (as in the boys' palace); `_fireplace`.
+- **Small:** the terrace's back faces in the front wall plane; balustrade post bottoms (shared); the walk-in
+  dormers' window-seat boards on the wall tops and their arched spandrels without a reveal (shared, as on the
+  boys' cupola); the back bedrooms' rugs ran under the en-suites; the maids' room runner under the rag rugs; the
+  attic purlins in the collar ceiling's plane.
+
+### Check
+- `--location obelisk_girls` is new.
+- **Trees** collide with their trunks in the game (the third-party registry's trunk collision), not with their
+  canopy's box. The walk grid used the box: a garden walk under a tree was closed. Trees and palms are trunk
+  boxes now (every location).
+
+## Results
+
+| Check | First run | Final |
+|---|---|---|
+| `academy_check --location obelisk_girls`: NPC spots | 3 | **0** |
+| doors | 46 | **0** |
+| paths: rooms, doors and NPCs nobody can reach | the second floor, the attic, the turret rooms (28 doors, 8 cameras, 5 NPCs incl. the gazebo walk and the jetty) | **0** |
+| paths: unreachable floor areas | 35 | 6 (see below) |
+| walls: z-fighting / back faces | 120 / 0 (the upper floors were not reached) | 5 / **0** |
+
+The 6 unreachable floor areas left: the soil of the conservatory's three planters, the dining table top, and
+the gable roof's top beside the attic door recesses (under the main roof). The 5 z-fighting entries are
+0.02-0.06 m2 (door reveal ends at the junction walls, the front steps' cheek, a jetty post).
+
+**Re-checks after the girls' pass** (shared helpers and the tree trunks changed):
+- boys' palace: NPC spots 0, doors 0, paths 31 (the same areas), z-fighting 40 (42), back faces 0;
+- Academy: NPC spots 0, doors 0, paths 157 (153 before: the same areas, grouped differently), z-fighting 896
+  (865: more of the grounds counts as seen with trunks instead of canopy boxes), back faces 25;
+- `spec_check.py obelisk`: PASS (boys 0/30, girls 0/21 views below target); `audit_interiors.py obelisk`: 0 issues;
+  `validate_layout.py --strict`, `test_interiors.py`: PASS.
