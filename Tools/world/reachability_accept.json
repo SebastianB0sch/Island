@@ -1,0 +1,59 @@
+{
+  "_doc": "Closed spaces the walk-in reachability audit (check_reachability.py) may report as unreachable rooms but that nobody is meant to enter. Per location group: box = [x0, y0, z0, x1, y1, z1] or ring = [cx, cy, r0, r1, z0, z1] (an annulus round a vertical axis) in the location's local frame (metres, as the audit prints 'local (x, y, z)'), matched against the unreachable sheet's centre; reason = why it is not a room. Keep entries tight: anything that is a real room must be fixed in the generator instead.",
+  "academy": [
+    {"ring": [0.0, 15.0, 20.0, 37.4, 1.5, 2.6],
+     "reason": "hollow under the arena stands (ring round the drum centre, tier radii 20 .. 37.3 m): the tiers are shells (tops + risers) standing on the arena floor, closed by the front parapet, the drum wall and the section ends; no door"},
+    {"box": [-26.5, -11.5, 30.5, 26.5, 41.5, 53.5],
+     "reason": "arena roof and the stepped pyramid over it: the slab inside the drum parapet and the inside of each of the seven steps (closed square ring shells, the floor of each is the top of the step below); no stair, ladder or door leads up there"},
+    {"box": [-104.0, -2.0, 22.0, -97.0, 12.0, 23.0],
+     "reason": "west end block: top of the 5F ceiling slab under the hip roof (closed roof void; the pavilion stairs end at 5F)"},
+    {"box": [97.0, -2.0, 22.0, 104.0, 12.0, 23.0],
+     "reason": "east end block: top of the 5F ceiling slab under the hip roof (closed roof void; the pavilion stairs end at 5F)"},
+    {"box": [-104.0, -49.0, 10.5, -98.0, -43.0, 48.0],
+     "reason": "inside the obelisk shaft of the north-west corner tower: a closed tapered shell standing on the balcony slab (11 m) - its floor and the tops of the band boxes inside it (the balcony round the shaft is reached from the third-floor glass door)"},
+    {"box": [98.0, -49.0, 10.5, 104.0, -43.0, 48.0],
+     "reason": "inside the obelisk shaft of the north-east corner tower: a closed tapered shell standing on the balcony slab (11 m) - its floor and the tops of the band boxes inside it (the balcony round the shaft is reached from the third-floor glass door)"},
+    {"box": [-104.0, 53.0, 10.5, -98.0, 59.0, 48.0],
+     "reason": "inside the obelisk shaft of the south-west corner tower: a closed tapered shell standing on the balcony slab (11 m) - its floor and the tops of the band boxes inside it (the balcony round the shaft is reached from the third-floor glass door)"},
+    {"box": [98.0, 53.0, 10.5, 104.0, 59.0, 48.0],
+     "reason": "inside the obelisk shaft of the south-east corner tower: a closed tapered shell standing on the balcony slab (11 m) - its floor and the tops of the band boxes inside it (the balcony round the shaft is reached from the third-floor glass door)"},
+    {"box": [-12.0, -76.0, 18.0, 12.0, -19.0, 19.0],
+     "reason": "lobby roof void: top of the lobby ceiling structure (18.4 m) under the roof slab (23.4 m), closed on all sides; no hatch or stair"},
+    {"box": [18.0, -60.0, 5.5, 29.0, -30.0, 9.3],
+     "reason": "card shop box inside the lobby: the plenum between the shop's ceiling (5.6 m) and its roof slab (8.5 m), and the roof top itself (8.9 m, behind a decorative balustrade, open only to the 7 m drop into the lobby); no stair leads up"},
+    {"box": [48.5, 24.5, 1.5, 87.5, 26.5, 2.6],
+     "reason": "inside the back tiers of the two lecture halls of this wing: the tier blocks are prisms without a bottom standing on the hall floor, so the floor inside them reads as closed pockets"},
+    {"box": [-87.5, 24.5, 1.5, -48.5, 26.5, 2.6],
+     "reason": "inside the back tiers of the two lecture halls of this wing: the tier blocks are prisms without a bottom standing on the hall floor, so the floor inside them reads as closed pockets"}
+  ],
+  "harbor": [
+    {"box": [-116.7, 33.3, 4.3, -94.5, 35.9, 5.2],
+     "reason": "warehouse: top level (4.5 m) of the two back-to-back pallet racks - beams and decking under the roof, a shelf for goods with no ladder, walled in by the uprights and the stored crates"}
+  ],
+  "plaza": [
+    {"box": [-11.0, -56.2, 8.3, 11.0, -53.8, 10.8],
+     "reason": "inside the closed lintel box of the south entrance gate (a solid beam modelled as a hollow box)"},
+    {"box": [-10.5, -56.5, 0.5, -7.5, -53.5, 11.3],
+     "reason": "inside the west pillar of the south entrance gate (a closed box standing on its plinth)"},
+    {"box": [7.5, -56.5, 0.5, 10.5, -53.5, 11.3],
+     "reason": "inside the east pillar of the south entrance gate (a closed box standing on its plinth)"}
+  ],
+  "obelisk_boys": [
+    {"box": [-2.6, 12.2, 1.9, 2.6, 15.8, 2.3],
+     "reason": "inside the half landing of the foyer's imperial stair: a solid marble block (box without a bottom face) standing on the foyer floor, closed on all sides"},
+    {"box": [-5.0, -10.0, 12.4, 5.0, -2.0, 15.0],
+     "reason": "inside the portico's gable roof, over the entablature: closed by the roof planes and the pediment, no opening"},
+    {"box": [-6.0, 8.0, 25.8, 6.0, 20.0, 30.0],
+     "reason": "inside the dome, above the cupola's painted-sky ceiling: closed between that ceiling and the dome shell"}
+  ],
+  "obelisk_girls": [
+    {"box": [-4.0, -48.0, 4.4, 4.0, -40.0, 8.0],
+     "reason": "inside the garden gazebo's dome, on the closed cap over the entablature ring"}
+  ],
+  "abandoned": [
+    {"box": [-20.0, -8.0, 11.1, 20.0, 10.0, 16.0],
+     "reason": "attic over the second-floor ceilings, under the holed roof: no stair or hatch leads up (the hole in the stairwell ceiling is painted damage)"},
+    {"box": [-5.0, -11.0, 21.4, 5.0, -2.0, 26.0],
+     "reason": "inside the clock tower's spire, above the clockwork room's ceiling (the ladder there ends at a painted hatch)"}
+  ]
+}

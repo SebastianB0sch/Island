@@ -73,8 +73,12 @@ PART = (5.0, 10.55, 15.95)       # partition lines of each wing (|x|)
 # capsule is lifted onto the next tread while its back is still 0.6 m behind that riser, so an opening that
 # starts where the headroom is "just" 1.9 m (y 2.4 / 4.65 before) stops it under the slab edge
 # (Tools/world/check_reachability.py).
-HOLE_A = (-5.0 + TP / 2 - 0.0, 1.9, -3.65, 5.90)    # stairwell 1F -> 2F (in the 2F floor)
-HOLE_B = (3.65, 1.9, 5.0 - TP / 2, 5.90)            # stairwell 2F -> 3F (in the 3F floor)
+# The flights start at STAIR_Y0 and arrive 5.13 m further on, which leaves 1.1 m of floor between the top of each
+# flight and the back wall (y 6.7): from y 0.75 it was 0.8 m, and the way off the top past the handrail's end was
+# narrower than the capsule (the 2F and 3F of the hall could not be reached).
+STAIR_Y0 = 0.45
+HOLE_A = (-5.0 + TP / 2 - 0.0, STAIR_Y0 + 1.15, -3.65, STAIR_Y0 + 5.15)    # stairwell 1F -> 2F (in the 2F floor)
+HOLE_B = (3.65, STAIR_Y0 + 1.15, 5.0 - TP / 2, STAIR_Y0 + 5.15)            # stairwell 2F -> 3F (in the 3F floor)
 # Attic stair (3F stair hall, along the west wall, climbing towards the ridge): foot / top y.  The foot used
 # to be at y = 6.5, 20 cm from the back wall (y = 6.7), with the wall on one side and the rail on the other -
 # nobody could step onto it.  It now leaves 1.2 m in front of the first riser.
@@ -1265,7 +1269,7 @@ def center_upper(aset, mb, nc, fi):
     K.railing(mb, [(hole[0] if fi == 1 else hole[2], hole[1]), (hx, hole[1]), (hx, 5.6)], zf, h=1.0,
               mat=K.TRIM_WOOD, spacing=0.13)
     if fi == 1:
-        _stair(mb, 4.25, 0.75, FLOORS[1], FLOORS[2], 1)
+        _stair(mb, 4.25, STAIR_Y0, FLOORS[1], FLOORS[2], 1)
     K.rug(nc, -1.0, -0.7, 1.0, 0.7, zf + 0.001, "M_IntCarpetYellow", border=K.TRIM_GOLD)
     ra_emblem(nc, 0.0, 0.0, zf + 0.014, 0.6)
     for x, txt in ((-BAYX + TP / 2, "WEST WING"), (BAYX - TP / 2, "EAST WING")):
@@ -1396,7 +1400,7 @@ def ground_floor(aset, mb, nc, rnd):
     ra_emblem(nc, 0.0, -3.4, zf + 0.001, 1.5)
     K.rug(nc, -0.85, -7.25, 0.85, -4.95, zf + 0.001, "M_IntCarpetRed", border=K.TRIM_GOLD)
     K.rug(nc, -0.85, -1.85, 0.85, 5.6, zf + 0.001, "M_IntCarpetRed", border=K.TRIM_GOLD)
-    _stair(mb, -4.25, 0.75, FLOORS[0], FLOORS[1], -1)
+    _stair(mb, -4.25, STAIR_Y0, FLOORS[0], FLOORS[1], -1)
     K.pendant(aset, 0.0, -3.4, ceil, "chandelier")
     K.pendant(aset, 0.0, 2.6, ceil, "chandelier")
     # reception / mail desk (east, front) with pigeonholes behind
@@ -1673,14 +1677,15 @@ def _dress_ground(aset, mb, nc):
     DT.desk_set(nc, aset, 2.88, -4.0, zf + 1.05, 90.0, "office", seed=4, w=1.6, d=0.5)
     DT.calendar(nc, hx1, -1.0, zf + 1.5, -90.0, seed=2)
     # the stair: runner, gallery of photos going up, sloped panelling
-    stair_runner(nc, -4.25, 0.75, FLOORS[0], FLOORS[1], 90.0, width=0.75)
-    rz = lambda y: zf + (y - 0.75) / 0.27 * (FLOORS[1] - zf) / 19
+    stair_runner(nc, -4.25, STAIR_Y0, FLOORS[0], FLOORS[1], 90.0, width=0.75)
+    rz = lambda y: zf + (y - STAIR_Y0) / 0.27 * (FLOORS[1] - zf) / 19
     for k, (y, a) in enumerate(((1.3, "SM_Int_Frame"), (2.25, "SM_Int_Frame"), (3.1, "SM_Int_Painting"),
                                 (4.0, "SM_Int_Frame"), (4.9, "SM_Int_Frame"))):
+        y += STAIR_Y0 - 0.75
         aset.prop(a, (hx0, y, rz(y) + 1.45), 90.0)
-    _poly2(mb, [(hx0 + 0.012, 0.75, zf), (hx0 + 0.012, 5.88, FLOORS[1]), (hx0 + 0.012, 5.88, FLOORS[1] + 0.9),
-                (hx0 + 0.012, 0.75, zf + 0.9)], K.WOOD)
-    mb.beam((hx0 + 0.03, 0.75, zf + 0.92), (hx0 + 0.03, 5.88, FLOORS[1] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
+    _poly2(mb, [(hx0 + 0.012, STAIR_Y0, zf), (hx0 + 0.012, STAIR_Y0 + 5.13, FLOORS[1]), (hx0 + 0.012, STAIR_Y0 + 5.13, FLOORS[1] + 0.9),
+                (hx0 + 0.012, STAIR_Y0, zf + 0.9)], K.WOOD)
+    mb.beam((hx0 + 0.03, STAIR_Y0, zf + 0.92), (hx0 + 0.03, STAIR_Y0 + 5.13, FLOORS[1] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
 
     # ================= common lounge
     xa, xb = -PART[2] + TP / 2, -BAYX - TP / 2
@@ -1844,13 +1849,14 @@ def _dress_upper(aset, mb, nc, fi):
     K.wainscot(mb, (hx1, IY1), (hx0, IY1), zf, 0.8, K.WOOD, cap=K.TRIM_WOOD,
                gaps=[(hx1 - x - 0.75, hx1 - x + 0.75) for x in (-2.8, 0.0, 2.8)])
     if fi == 1:     # the 2F -> 3F flight climbs along the east wall
-        stair_runner(nc, 4.25, 0.75, FLOORS[1], FLOORS[2], 90.0, width=0.75)
-        rz = lambda y: zf + (y - 0.75) / 0.27 * (FLOORS[2] - zf) / 19
-        _poly2(mb, [(hx1 - 0.012, 0.75, zf), (hx1 - 0.012, 0.75, zf + 0.9), (hx1 - 0.012, 5.88, FLOORS[2] + 0.9),
-                    (hx1 - 0.012, 5.88, FLOORS[2])], K.WOOD)
-        mb.beam((hx1 - 0.03, 0.75, zf + 0.92), (hx1 - 0.03, 5.88, FLOORS[2] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
+        stair_runner(nc, 4.25, STAIR_Y0, FLOORS[1], FLOORS[2], 90.0, width=0.75)
+        rz = lambda y: zf + (y - STAIR_Y0) / 0.27 * (FLOORS[2] - zf) / 19
+        _poly2(mb, [(hx1 - 0.012, STAIR_Y0, zf), (hx1 - 0.012, STAIR_Y0, zf + 0.9), (hx1 - 0.012, STAIR_Y0 + 5.13, FLOORS[2] + 0.9),
+                    (hx1 - 0.012, STAIR_Y0 + 5.13, FLOORS[2])], K.WOOD)
+        mb.beam((hx1 - 0.03, STAIR_Y0, zf + 0.92), (hx1 - 0.03, STAIR_Y0 + 5.13, FLOORS[2] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
         for y in (1.4, 2.5, 3.6, 4.7):
-            aset.prop("SM_Int_Frame" if y < 3 else "SM_Int_Painting", (hx1, y, rz(y) + 1.45), -90.0)
+            y += STAIR_Y0 - 0.75
+            aset.prop("SM_Int_Frame" if y < 3 + STAIR_Y0 - 0.75 else "SM_Int_Painting", (hx1, y, rz(y) + 1.45), -90.0)
         # landing lounge dressing
         banner(nc, aset, hx0, -3.0, zf + 2.95, 90.0, 1.0, 1.45, "RA YELLOW")
         with lift(zf, mb, nc):

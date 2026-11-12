@@ -345,13 +345,30 @@ class MeshBuilder:
                     return
                 self.box(((u0 + u1) / 2, t / 2, (v0 + v1) / 2), (u1 - u0, t, v1 - v0), mat,
                          mats={"+y": inner_mat} if inner_mat else None)
+            spans = [(max(o["u"] - o["w"] / 2, 0.0), min(o["u"] + o["w"] / 2, length)) for o in ops]
+            stacked = any(a0 < b1 - 1e-6 and b0 < a1 - 1e-6
+                          for i, (a0, a1) in enumerate(spans) for (b0, b1) in spans[i + 1:])
+            if stacked:
+                # openings sharing a stretch of wall (a door above a door): cut the wall between every pair of
+                # opening edges and leave out all the openings over each piece.  (The plain loop below fills the
+                # whole height above / below each opening, which walled up the other one.)
+                cuts = sorted({0.0, length, *[v for sp in spans for v in sp]})
+                for ua, ub in zip(cuts[:-1], cuts[1:]):
+                    um = (ua + ub) / 2
+                    gaps = sorted((o.get("z0", 0.0), o["z1"]) for o, (a, b) in zip(ops, spans) if a < um < b)
+                    v = 0.0
+                    for (g0, g1) in gaps:
+                        piece(ua, ub, v, g0)
+                        v = max(v, g1)
+                    piece(ua, ub, v, height)
             u = 0.0
             for o in ops:
                 ou0, ou1 = o["u"] - o["w"] / 2, o["u"] + o["w"] / 2
                 ou0, ou1 = max(ou0, 0.0), min(ou1, length)
-                piece(u, ou0, 0.0, height)                 # solid part before opening
-                piece(ou0, ou1, 0.0, o.get("z0", 0.0))      # below opening
-                piece(ou0, ou1, o["z1"], height)            # above opening
+                if not stacked:
+                    piece(u, ou0, 0.0, height)                 # solid part before opening
+                    piece(ou0, ou1, 0.0, o.get("z0", 0.0))      # below opening
+                    piece(ou0, ou1, o["z1"], height)            # above opening
                 fr = o.get("frame")
                 if fr:
                     fw = 0.08
@@ -366,7 +383,8 @@ class MeshBuilder:
                     self.box(((ou0 + ou1) / 2, t / 2, (o.get("z0", 0.0) + o["z1"]) / 2),
                              (ou1 - ou0, 0.04, o["z1"] - o.get("z0", 0.0)), gl)
                 u = ou1
-            piece(u, length, 0.0, height)
+            if not stacked:
+                piece(u, length, 0.0, height)
             if cap_mat:
                 self.box((length / 2, t / 2, height + 0.05), (length + 0.1, t + 0.1, 0.1), cap_mat)
 

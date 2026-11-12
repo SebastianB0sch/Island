@@ -334,8 +334,11 @@ def stairs(mb, x, y, z0, z1, yaw, width, mat=WOOD, riser=None, stringer=None, ra
     return run * n
 
 
-def spiral_stairs(mb, cx, cy, z0, z1, r_in, r_out, a0=0.0, step_deg=20.0, mat=METAL, core=None, rail=None):
-    """Spiral staircase around a central post, climbing CCW from angle a0 (deg)."""
+def spiral_stairs(mb, cx, cy, z0, z1, r_in, r_out, a0=0.0, step_deg=20.0, mat=METAL, core=None, rail=None,
+                  open_top=0):
+    """Spiral staircase around a central post, climbing CCW from angle a0 (deg).  open_top: the top treads
+    left without the outer rail - where the floor above is reached sideways off the last treads (a rail
+    right up to the top shuts the stair off from that floor)."""
     n = max(4, int(round((z1 - z0) / 0.19)))
     rise = (z1 - z0) / n
     if core:
@@ -351,7 +354,7 @@ def spiral_stairs(mb, cx, cy, z0, z1, r_in, r_out, a0=0.0, step_deg=20.0, mat=ME
             pts.append((cx + math.cos(ang) * r_out, cy + math.sin(ang) * r_out))
         pts_ccw = [pts[0], pts[3], pts[2], pts[1]]
         mb.prism(pts_ccw if _ccw(pts_ccw) else list(reversed(pts_ccw)), z - 0.06, z, mat)
-        if rail:
+        if rail and i < n - open_top:
             am = (a + b) / 2
             px, py = cx + math.cos(am) * (r_out - 0.05), cy + math.sin(am) * (r_out - 0.05)
             mb.box((px, py, z + 0.45), (0.035, 0.035, 0.9), rail)

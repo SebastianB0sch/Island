@@ -7,7 +7,8 @@ Pure Python + numpy (no Blender, no Unreal).  It reads what the editor build imp
   * SourceAssets/Meshes/**/*.fbx                   the exported collision geometry itself
         - location / terrain / road meshes: every triangle (Unreal uses complex-as-simple for them)
         - furniture blocker meshes (hidden, collision only)
-        - prop instances: their UCX_ hulls (simple collision); props without a hull do not collide
+        - prop instances: their UCX_ hulls (simple collision); props without a hull do not collide.
+          A hull is a solid convex body in Unreal, so floors inside one (under a container) do not count
         - *_NoCol meshes, water and door leaves (pawns ignore them) are left out
   * Content/Data/World/*.json                      portal cells, portals, anchors, spawns
 
@@ -74,6 +75,8 @@ MIN_STOREY_AREA = 6.0         # m2 of level floor at one height before it is lis
 NPC_Z = 0.95                  # layout.json NPC markers / wander points are this far above the feet (layout.py)
 ARRIVAL_Z = 1.0               # ... and fast-travel arrival points this far
 NPC_TALK = 2.4                # ADAStudentNPC::GetInteractRadius is 260 cm: the player must get this close
+SEAT_REACH = 1.5              # "player" anchors in the portal cells are where a scene seats / stands the player
+                              # (the exam desk): room for the capsule there, and walkable floor this close
 
 
 # --------------------------------------------------------------------------- coordinates
@@ -139,6 +142,51 @@ class World:
             self._mesh[key] = np.concatenate(tris) if tris else np.zeros((0, 3, 3))
         return self._mesh[key]
 
+    def hull_parts(self, name):
+        """The UCX_ hulls of a mesh asset as hull_planes() of each part (local frame, convex parts only)."""
+        cache = self.__dict__.setdefault("_hulls", {})
+        if name not in cache:
+            parts = fbx_lite.read_meshes(self.src / self.assets[name]["file"])
+            cache[name] = [h for h in (hull_planes(v[t]) for n, v, t in parts if n.startswith("UCX_") and len(t))
+                           if h is not None]
+        return cache[name]
+
+    def buried_floors(self, field, origin):
+        """Floors of the field inside a prop's collision hull.  Unreal makes every UCX_ hull one solid convex
+        body, but the field only sees its faces: the floor under a tall hull (the warehouse floor under a
+        shipping container) would read as a closed room walled by the hull's sides.  Hulls lower than the
+        capsule are skipped - the floor under them has the hull top as a too-low ceiling anyway."""
+        out = np.zeros(field.n, bool)
+        if field.n == 0:
+            return out
+        cs, nx = field.cs, field.nx
+        for mesh, items in self.props:
+            parts = [h for h in self.hull_parts(mesh) if h[3][2] - h[2][2] > 0.5]
+            if not parts:
+                continue
+            ext = max(float(np.abs(np.concatenate([h[2], h[3]])).max()) for h in parts)
+            for (ux, uy, uz, yaw, sc) in items:
+                use = [h for h in parts if (h[3][2] - h[2][2]) * sc >= PLAYER.height]
+                if not use:
+                    continue
+                pos = from_ue((ux, uy, uz)) - origin
+                rr = ext * sc
+                i0, i1 = max(int((pos[0] - rr) / cs), 0), min(int((pos[0] + rr) / cs) + 1, nx)
+                j0, j1 = max(int((pos[1] - rr) / cs), 0), min(int((pos[1] + rr) / cs) + 1, field.ny)
+                if i0 >= i1 or j0 >= j1:
+                    continue
+                rows = np.arange(j0, j1) * nx
+                a = np.searchsorted(field.fcol, rows + i0, side="left")
+                b = np.searchsorted(field.fcol, rows + i1, side="left")
+                sel = np.concatenate([np.arange(p, q) for p, q in zip(a, b)]) if (b > a).any() else []
+                if len(sel) == 0:
+                    continue
+                p = np.stack([(field.fi[sel] + 0.5) * cs, (field.fj[sel] + 0.5) * cs, field.fz[sel] + 0.05], 1)
+                q = rot_z(p - pos, yaw) / sc
+                for nrm, d, _, _ in use:
+                    out[sel[np.all(q @ nrm.T - d < -1e-3, axis=1)]] = True
+        return out
+
     def static_tris(self, e):
         t = self.mesh(e["mesh"])
         return rot_z(t, e["yaw_b"]) + e["pos"]
@@ -182,6 +230,27 @@ class World:
         if not tris:
             return np.zeros((0, 3, 3)), np.zeros(0, np.int8), np.zeros(0, np.int32), names
         return np.concatenate(tris), np.concatenate(cls), np.concatenate(ids), names
+
+
+def hull_planes(tris):
+    """(outward unit normals (F, 3), offsets (F,), lo, hi) of the convex body the triangles (T, 3, 3) bound -
+    a point p is inside when normals @ p - offsets < 0 for every face - or None when they do not bound a
+    convex body (a hull that is not convex is not trusted to be solid)."""
+    v = tris.reshape(-1, 3)
+    nrm = np.cross(tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0])
+    ln = np.linalg.norm(nrm, axis=1)
+    ok = ln > 1e-12
+    if ok.sum() < 4:
+        return None
+    nrm, t0 = nrm[ok] / ln[ok, None], tris[ok, 0]
+    d = np.einsum("ij,ij->i", nrm, t0)
+    flip = nrm @ v.mean(0) - d > 0                    # orient every face away from the centroid
+    nrm[flip] *= -1.0
+    d[flip] *= -1.0
+    tol = 1e-4 * max(float(np.ptp(v, axis=0).max()), 1.0)
+    if (v @ nrm.T - d).max() > tol or (nrm @ v.mean(0) - d).max() > -tol:
+        return None
+    return nrm, d, v.min(0), v.max(0)
 
 
 # --------------------------------------------------------------------------- exact door measurement
@@ -238,15 +307,25 @@ class Region:
         zmin = float(self.tris[:, :, 2].min()) if len(self.tris) else float(lo[2])
         self.origin = np.array([lo[0], lo[1], min(zmin, lo[2]) - 1.0])
         self.field = navgrid.build_field(self.tris, cls, self.origin, hi - self.origin, cell, PLAYER)
+        self.buried = world.buried_floors(self.field, self.origin)       # inside a solid prop hull
+        self.field.stand &= ~self.buried
         self.reached = np.zeros(self.field.n, bool)
         self.loose = None
+        self._npc_stand = None
+
+    @property
+    def npc_stand(self):
+        """Floors where an ADAStudentNPC (capsule radius 36 cm, 2 cm less than the player) can stand."""
+        if self._npc_stand is None:
+            self._npc_stand = self.field.stand_mask(NPC_RADIUS) & ~self.buried
+        return self._npc_stand
 
     def local(self, p):
         return np.asarray(p, np.float64) - self.origin
 
-    def snap(self, p, reach=0.5, dz=0.6, standable=True):
+    def snap(self, p, reach=0.5, dz=0.6, standable=True, stand=None):
         q = self.local(p)
-        return self.field.snap(q[0], q[1], q[2], reach, dz, standable)
+        return self.field.snap(q[0], q[1], q[2], reach, dz, standable, stand)
 
     def seed(self, p, reach=3.0):
         i = self.snap(p, reach=reach, dz=1.5)
@@ -274,13 +353,14 @@ class Region:
 
 
 def check_mark(reg, p, reach=0.5, dz=0.6, talk=0.0):
-    """None when the mark at feet position p is fine.  talk > 0: somebody *stands* there and the player
-    only has to get within `talk` metres (NPCs behind a counter); otherwise the player walks to it."""
+    """None when the mark at feet position p is fine.  talk > 0: an NPC *stands* there - with its own
+    capsule (36 cm, ADAStudentNPC) - and the player only has to get within `talk` metres (NPCs behind a
+    counter); otherwise the player walks to it."""
     if talk <= 0.0:
         return reg.status(p, reach, dz)
-    if reg.snap(p, reach, dz) < 0:
+    if reg.snap(p, reach, dz, stand=reg.npc_stand) < 0:
         return reg.status(p, reach, dz) if reg.snap(p, reach, dz, standable=False) < 0 else \
-            "no room for the capsule (wall / furniture / low ceiling within its radius)"
+            "no room for the NPC capsule (wall / furniture / low ceiling within its radius)"
     if reg.status(p, talk, 1.5):
         return f"cannot be approached: no reachable floor within {talk:.1f} m"
     return None
@@ -555,21 +635,21 @@ def audit_location(world, group, cell, log, accept):
             continue
         n_all += 1
         n_ok += mark("npc", nm, home, talk=NPC_TALK)
-        hi_ = reg.snap(home)
-        sheet = f.flood([hi_]) if hi_ >= 0 else None
+        hi_ = reg.snap(home, stand=reg.npc_stand)
+        sheet = f.flood([hi_], stand=reg.npc_stand) if hi_ >= 0 else None
         for k, pt in enumerate(npc.get("points") or []):
             q = from_ue(pt) - [0, 0, NPC_Z]
             if not inside(q):
                 continue
             n_all += 1
-            qi = reg.snap(q)
+            qi = reg.snap(q, stand=reg.npc_stand)            # the NPC walks there with its own capsule
             if qi < 0:
-                fail(f"npc wander point {nm}#{k} at {where(q)}: {reg.status(q) or 'no room for the capsule'}")
+                fail(f"npc wander point {nm}#{k} at {where(q)}: {reg.status(q) or 'no room for the NPC capsule'}")
                 continue
             n_ok += 1
             if sheet is not None and not sheet[qi]:
                 warn(f"npc wander point {nm}#{k} at {where(q)}: not on the same walkable sheet as the NPC's home "
-                     f"for the player-sized capsule (the pipeline's straight-line check passed it)")
+                     f"for the NPC capsule (the pipeline's straight-line check passed it)")
     for z in world.layout["zones"]:
         if z.get("parent") == group:
             n_all += 1
@@ -647,7 +727,14 @@ def explain(reg, res, where, want):
 
 
 def accepted(accept, group, q):
+    """Reason of the accept-list entry of the group that holds the local point q: "box" [x0, y0, z0, x1, y1, z1]
+    or "ring" [cx, cy, r0, r1, z0, z1] (an annulus round a vertical axis, e.g. the hollow under round stands)."""
     for a in accept.get(group, []):
+        if "ring" in a:
+            cx, cy, r0, r1, z0, z1 = a["ring"]
+            if r0 <= math.hypot(q[0] - cx, q[1] - cy) <= r1 and z0 <= q[2] <= z1:
+                return a["reason"]
+            continue
         b = a["box"]
         if b[0] <= q[0] <= b[3] and b[1] <= q[1] <= b[4] and b[2] <= q[2] <= b[5]:
             return a["reason"]
@@ -698,7 +785,7 @@ def audit_cell(world, cell, grid, log):
             continue
         n_all += 1
         n_ok += mark(f"anchor ({a['kind']})", a["id"], from_ue(a["position_ue"]) - [0, 0, 1.0], reach=0.4, dz=0.5,
-                     talk=NPC_TALK if a["kind"] == "npc" else 0.0)
+                     talk=NPC_TALK if a["kind"] == "npc" else SEAT_REACH if a["kind"] == "player" else 0.0)
     for it in world.layout["interacts"]:
         if it.get("group") == cid:
             n_all += 1

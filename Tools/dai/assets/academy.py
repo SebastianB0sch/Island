@@ -385,10 +385,10 @@ def win_us(L, count, w):
     return [margin + step * (i + 0.5) for i in range(count)]
 
 
-def fwin(mb, p0, p1, z, count, w, h, cut=None, glass="M_Glass", frame="M_WindowFrame", depth=0.06):
+def fwin(mb, p0, p1, z, count, w, h, cut=None, glass="M_Glass", frame="M_WindowFrame", depth=0.06, skip=None):
     """One row of MeshBuilder.facade_windows. Windows for which cut((x, y)) is true are real openings in a
     hollow wall: they keep their exterior frame + sill but lose the opaque facade pane (the clear pane sits
-    in the wall opening, see K.Window)."""
+    in the wall opening, see K.Window).  Windows for which skip((x, y)) is true are left out (a doorway)."""
     L = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
     yaw = math.degrees(math.atan2(p1[1] - p0[1], p1[0] - p0[0]))
     ux, uy = (p1[0] - p0[0]) / L, (p1[1] - p0[1]) / L
@@ -396,6 +396,8 @@ def fwin(mb, p0, p1, z, count, w, h, cut=None, glass="M_Glass", frame="M_WindowF
     with mb.at((p0[0], p0[1], 0.0), rot=yaw):
         for u in win_us(L, count, w):
             c = (p0[0] + ux * u, p0[1] + uy * u)
+            if skip and skip(c):
+                continue
             if not (cut and cut(c)):
                 mb.box((u, -depth / 2, z + h / 2), (w, depth, h), glass, skip=("+y",))
             mb.box((u - w / 2 - fw / 2, -depth, z + h / 2), (fw, depth * 2, h + 2 * fw), frame, skip=("+y",))
@@ -1370,7 +1372,10 @@ def _wings(mb, nocol, aset):
             fwin(mb, (wa, y0), (wb, y0), zr, n, 1.7, 2.5, cut=lambda c: True)
             fwin(mb, (wb, y1), (wa, y1), zr, n, 1.7, 2.5, cut=lambda c: True)
         fwin(mb, (wa, y0), (wb, y0), ROWS[1], n, 1.7, 2.5, cut=lambda c: True)
-        fwin(mb, (wa, y0), (wb, y0), ROWS[0], n, 1.7, 2.5, cut=lambda c: abs(abs(c[0]) - 64.0) > 2.4)
+        # (none over the portal: the two either side of it were drawn as dummy windows - opaque pane and frame
+        # across the outer 0.8 m of each side of the doorway, from 0.9 m up)
+        fwin(mb, (wa, y0), (wb, y0), ROWS[0], n, 1.7, 2.5, cut=lambda c: True,
+             skip=lambda c: abs(abs(c[0]) - 64.0) <= 2.4)
         fwin(mb, (wb, y1), (wa, y1), ROWS[0], n, 1.7, 2.5, cut=lambda c: abs(c[0]) < DR_X[1])
         fwin(mb, (wb, y1), (wa, y1), ROWS[1], n, 1.7, 2.5, cut=lambda c: True)
         bay = (wb - wa) / n
@@ -2896,7 +2901,9 @@ def room_classroom(C, w, d, name, cam, seed, wl=(), end_win=None, z=FLOOR, lines
     C.poster(-hw, hd * 0.5, z + 1.6, 90.0, 0.6, 0.85, K.POSTERS[seed % 4], "RULES", size=0.08)
     C.dt("calendar", -hw, -hd * 0.45, z + 1.55, 90.0, seed)
     C.npc(xs[1], -hd + 3.0 + 0.4, 0.0, "slifer", 0.3, z=z)
-    C.npc(xs[3], -hd + 3.0 + 1.2 * 2 + 0.4, 0.0, "ra", 0.3, z=z)
+    # (third row, at the desk by the door-wall aisle: the aisles between the desks are 0.5 m, and at xs[3] the
+    # student sat out of talking reach of anywhere the player can walk)
+    C.npc(xs[0], -hd + 3.0 + 1.2 * 2 + 0.4, 0.0, "ra", 0.3, z=z)
     C.npc(1.4, -hd + 1.0, 180.0, "white", 1.0, z=z + 0.18)
     C.cam(cam, (hw - 0.7, hd - 0.9, z + 1.7), (-0.8, -hd, z + 1.1), 17)
 
@@ -3737,7 +3744,11 @@ def stair_core(C, zl, zh):
     zm = (zl + zh) / 2
     L = C.stairs(xa, -7.75, zl, zm, "+x", 1.3, K.MARBLEFLOOR, riser=K.TRIM_WHITE)
     xb = xa + L
-    C.box(xb, y0, zl, 109.8, -5.5, zm, BLUE_T, mats={"+z": K.MARBLEFLOOR})
+    # half landing: a solid block down to the floor on the first storey (it stands on the 2F floor), a 0.4 m
+    # slab above that - as a block down to its own storey level, the 4F landing (shorter flights: 3.7 m storey)
+    # hung 0.56 m out over the 3F flight below with 1.7 m under it, and 4F / 5F could not be reached
+    zb = zl if zl <= UF + 0.01 else zm - 0.4
+    C.box(xb, y0, zb, 109.8, -5.5, zm, BLUE_T, mats={"+z": K.MARBLEFLOOR, "-z": K.CEIL})
     C.stairs(xb, -6.2, zm, zh, "-x", 1.3, K.MARBLEFLOOR, riser=K.TRIM_WHITE)
     C.box(xa, -7.1, zl, xb, -6.85, zh - 0.2, IN_WALL, mats={"+y": BLUE_T, "-y": BLUE_T})
     stair_rail(C, xb, -5.6, zm, xa, -5.6, zh)
@@ -4145,7 +4156,9 @@ def _wing_floors(C, s):
             C.prop("SM_Int_Frame", x, cy1 - 0.02, z + 1.6, 0.0)
             if k % 2 and abs(x + 3.0 - 45.0) > 2.0 and abs(x + 3.0 - 75.0) > 2.0:
                 C.prop("SM_Int_Bench", x + 3.0, cy1 - 0.3, z, 0.0)
-        zone_dress(C, 38.0, cy0, 88.0, cy1, z, z + 3.3, 40 + lvl, rug=False, plants=2, frames=0, banners=6)
+        # one plant (at the closed end by the arena): the second stood in the way from the pavilion stair into
+        # this corridor - with the wall stub there it left 0.5 m, and 3F / 4F of the wing could not be reached
+        zone_dress(C, 38.0, cy0, 88.0, cy1, z, z + 3.3, 40 + lvl, rug=False, plants=1, frames=0, banners=6)
         C.rug(39.0, 3.2, 87.0, 4.4, "M_IntFabricRed", K.TRIM_GOLD, z=z + 0.006)
         for xl in (56.5, 68.5, 80.5):                              # lockers + trophy cases along the hall wall
             C.lockers(xl, cy1 - 0.24, 0.0, 8, z=z)

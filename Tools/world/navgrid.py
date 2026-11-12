@@ -242,6 +242,7 @@ class Field:
         self.fsrc = np.zeros(0, np.int8)
         self.n = 0
         self.nb = np.zeros((4, 0), np.int64)
+        self.edge = np.zeros(0, bool)
         self.stand = np.zeros(0, bool)
 
     def _shift(self, di, dj, idx=None):
@@ -290,6 +291,11 @@ class Field:
 
     def _neighbours(self):
         self.nb = self.neighbours(self.agent.step)
+        # floors with a missing direct neighbour - the only ones a wall can be near (see stand_mask).  Taken
+        # before the gap bridging: a bridge across a wall's face columns (a 20 - 30 cm wall reads like a gap)
+        # made the floors either side look interior, their radius test was skipped, and the flood walked
+        # through the wall.
+        self.edge = (self.nb < 0).any(axis=0) if self.n else np.zeros(0, bool)
         if self.n:
             self._bridge_gaps()
 
@@ -302,7 +308,7 @@ class Field:
         offs = [(di, dj) for di in range(-r, r + 1) for dj in range(-r, r + 1)
                 if (di or dj) and di * di + dj * dj <= reach * reach + 1e-9]
         # only floors near an edge of the walkable sheet can have a wall inside the radius
-        near = (self.nb < 0).any(axis=0)
+        near = self.edge.copy()
         for _ in range(int(math.ceil(1.5 * r)) + 1):
             grown = near.copy()
             for d in range(4):
@@ -337,9 +343,11 @@ class Field:
         self.stand = self.stand_mask(self.agent.radius)
 
     # ------------------------------------------------------------------ queries
-    def snap(self, x, y, z, reach=0.5, dz=0.6, standable=True):
+    def snap(self, x, y, z, reach=0.5, dz=0.6, standable=True, stand=None):
         """Index of the floor nearest to (x, y, z) (grid space) within `reach` in plan and `dz` in height,
-        or -1.  With standable=False any floor counts (to explain a failure)."""
+        or -1.  With standable=False any floor counts (to explain a failure); stand overrides the agent's
+        own standable mask (another capsule radius, see stand_mask)."""
+        stand = self.stand if stand is None else stand
         r = int(math.ceil(reach / self.cs))
         ci, cj = int(math.floor(x / self.cs)), int(math.floor(y / self.cs))
         best, bd = -1, None
@@ -354,7 +362,7 @@ class Field:
                 c = i + j * self.nx
                 lo = int(np.searchsorted(self.fkey, c * _ZK + (z - dz), side="left"))
                 while lo < self.n and self.fcol[lo] == c and self.fz[lo] <= z + dz:
-                    if not standable or self.stand[lo]:
+                    if not standable or stand[lo]:
                         cost = d2 + (self.fz[lo] - z) ** 2
                         if bd is None or cost < bd:
                             best, bd = lo, cost

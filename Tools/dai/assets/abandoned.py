@@ -349,14 +349,27 @@ T_FZ, T_TOP = 7.85, 11.0               # second floor (behind the 8.6 m window r
 T_WB = T_FZ - 0.03
 FL2 = dict(fz=U_FZ, top=U_TOP, row=1, tag="")
 FL3 = dict(fz=T_FZ, top=T_TOP, row=2, tag="_3f")
-STAIR_LAND = 4.65                      # stairwell bay: top landing strip y 4.0 .. 4.65, flights beyond
+# stairwell bay: top landing strip y 4.0 .. STAIR_LAND on the 2nd floor, flights beyond.  1.1 m deep: at 0.65 m
+# (between the corridor wall and the balustrade) it was narrower than the 0.76 m character capsule, and the
+# second floor could not be reached from either stair (Tools/world/check_reachability.py).  The flights take
+# 0.24 m treads (were 0.28) so the half landing keeps its depth in front of the back window.
+STAIR_LAND = 5.1
+STAIR_RUN = 0.24
 TFL = (HZ1 + 0.2, 11.8, 15.6)          # tower floors: store room, keeper's room, clockwork room
 TCEIL = (11.6, 15.4, 19.5)
 TIN = (-TX + 0.6, TY0 + 0.6, TX - 0.6, TY1 - 0.6)   # tower inner faces (x0, y0, x1, y1)
-SPIRAL = (-2.9, -9.3, 1.0)             # hall -> tower spiral stair (centre x, y, outer radius)
+# hall -> tower spiral stair (centre x, y, outer radius).  Outer radius 1.05 m (was 1.0): between the core
+# (0.1 m) and the handrail, whose straight runs cut 7 cm inside the posts, the way up was 0.83 m - only 7 cm more
+# than the 0.76 m character capsule; now it fills the stair hole in the hall ceiling
+SPIRAL = (-2.9, -9.3, 1.05)
 SPIRAL_HOLE = (TIN[0], TIN[1], -1.85, -8.25)
-FLIGHT_A = (3.4, -9.9)                 # store room -> keeper's room (climbs +y along the east wall)
-FLIGHT_B = (-3.4, -3.1)                # keeper's room -> clockwork room (climbs -y along the west wall)
+# Tower flights: each starts 1.0 m from the end wall (they started 0.5 m from it, too little room to step
+# onto the first tread for the 0.76 m character capsule) and leaves a 0.92 m landing at the top.
+FLIGHT_A = (3.4, -9.4)                 # store room -> keeper's room (climbs +y along the east wall)
+FLIGHT_B = (-3.4, -3.6)                # keeper's room -> clockwork room (climbs -y along the west wall)
+KEEPER_HOLE = (2.85, -7.5, TIN[2], -3.52)       # opening for FLIGHT_A in the keeper's room floor
+CLOCK_HOLE = (TIN[0], -9.48, -2.85, -5.4)       # opening for FLIGHT_B in the clockwork room floor (from 1.8 m
+#                                                 up the flight: the keeper's room beam at y -5.65 then falls in it)
 
 
 def _mwall(aset, mb, sx, p0, p1, z0, h, thick, mat, inner=None, openings=(), plain=False):
@@ -461,8 +474,8 @@ def _tower_shell(mb):
             [dict(u=u, w=0.8, z0=rel(16.0), z1=rel(18.6)) for u in (3.6, 5.6)], inner_mat=U_WALL)
     # floors (with the stair holes) and the solid spire base above the clockwork room
     K.slab(mb, x0, y0, x1, y1, TFL[0] - 0.03, TFL[0] - 0.03 - HZ1, ROT, bottom=ROT, side=ROT, holes=[SPIRAL_HOLE])
-    K.slab(mb, x0, y0, x1, y1, TFL[1] - 0.03, 0.2, ROT, bottom=U_CEIL, side=ROT, holes=[(2.85, -8.0, x1, -4.02)])
-    K.slab(mb, x0, y0, x1, y1, TFL[2] - 0.03, 0.2, ROT, bottom=U_CEIL, side=ROT, holes=[(x0, -8.98, -2.85, -5.3)])
+    K.slab(mb, x0, y0, x1, y1, TFL[1] - 0.03, 0.2, ROT, bottom=U_CEIL, side=ROT, holes=[KEEPER_HOLE])
+    K.slab(mb, x0, y0, x1, y1, TFL[2] - 0.03, 0.2, ROT, bottom=U_CEIL, side=ROT, holes=[CLOCK_HOLE])
     mb.box_mm((x0, y0, TCEIL[2]), (x1, y1, TTOP), STONE, mats={"-z": U_CEIL})
 
 
@@ -676,8 +689,14 @@ def _tower(mb, roof, nc, rng):
             rbox(mb, (0.28, -0.32, 0.3), (0.12, 0.85, 0.05), "M_Black", yaw=-40)
             mb.cylinder((0, 0, 0.24), 0.1, 0.1, RUST, seg=8)
     facade_trim(mb, (-TX, TY0), 0, 2 * TX, courses=(7.85, 15.6, 19.6), cornice=TTOP, quoins=(FL, TTOP))
-    facade_trim(mb, (TX, TY0), 90, TY1 - TY0, courses=FLOOR_BANDS + (15.6, 19.6), cornice=TTOP, quoins=(FL, TTOP))
-    facade_trim(mb, (-TX, TY1), -90, TY1 - TY0, courses=FLOOR_BANDS + (15.6, 19.6), cornice=TTOP, quoins=(FL, TTOP))
+    # side faces: behind the front facade (y > Y0) they are the library/salon walls under the main roof, so the
+    # floor bands only run along the front projection and the back-corner quoins start at 13 m like the back face's
+    # (they used to stand 8 cm proud of the wallpaper inside the rooms, half across the hall's side doorways)
+    for org, yaw, qe in (((TX, TY0), 90, (True, False)), ((-TX, TY1), -90, (False, True))):
+        facade_trim(mb, org, yaw, TY1 - TY0, courses=(15.6, 19.6), cornice=TTOP, quoins=(FL, TTOP), q_ends=qe)
+        facade_trim(mb, org, yaw, TY1 - TY0, quoins=(13.0, TTOP), q_ends=qe[::-1])
+    facade_trim(mb, (TX, TY0), 90, Y0 - TY0, courses=FLOOR_BANDS, quoins=())
+    facade_trim(mb, (-TX, Y0), -90, Y0 - TY0, courses=FLOOR_BANDS, quoins=())
     facade_trim(mb, (TX, TY1), 180, 2 * TX, courses=(15.6, 19.6), cornice=TTOP, quoins=(13.0, TTOP))
     for org, yaw in (((TX, TY0), 90), ((-TX, TY1), -90), ((TX, TY1), 180)):
         with mb.at(org, rot=yaw), nc.at(org, rot=yaw):
@@ -1216,16 +1235,30 @@ def _room_wainscot(mb, x0, y0, x1, y1, z, h, gaps=None):
         K.wainscot(mb, p0, p1, z, h, "M_IntWoodDark", cap="M_DarkWood", gaps=gaps.get(k, ()))
 
 
-def _beams(mb, x0, y0, x1, y1, z, step=1.9, along="x"):
+def _beams(mb, x0, y0, x1, y1, z, step=1.9, along="x", holes=()):
+    """Ceiling beams; holes [(x0, y0, x1, y1)]: stair openings in the floor above, which the beams stop at
+    (trimmed - run across, 1.3 - 1.7 m over the flight, they blocked the tower stairs)."""
+    def runs(a, b, c, lo_i, hi_i, cut_i):
+        cuts = sorted((h[lo_i], h[hi_i]) for h in holes if h[cut_i] - 0.12 < c < h[cut_i + 2] + 0.12)
+        out, u = [], a
+        for (p, q) in cuts:
+            if p > u:
+                out.append((u, min(p, b)))
+            u = max(u, q)
+        if b > u:
+            out.append((u, b))
+        return [(p, q) for (p, q) in out if q - p > 0.05]
     if along == "x":
         y = y0 + step / 2
         while y < y1 - 0.2:
-            mb.box_mm((x0, y - 0.12, z - 0.28), (x1, y + 0.12, z), "M_DarkWood")
+            for (a, b) in runs(x0, x1, y, 0, 2, 1):
+                mb.box_mm((a, y - 0.12, z - 0.28), (b, y + 0.12, z), "M_DarkWood")
             y += step
     else:
         x = x0 + step / 2
         while x < x1 - 0.2:
-            mb.box_mm((x - 0.12, y0, z - 0.28), (x + 0.12, y1, z), "M_DarkWood")
+            for (a, b) in runs(y0, y1, x, 1, 3, 0):
+                mb.box_mm((x - 0.12, a, z - 0.28), (x + 0.12, b, z), "M_DarkWood")
             x += step
 
 
@@ -2163,15 +2196,16 @@ def _stairwell(aset, mb, nc, rng, sx):
     K.floor_planks(mb, xa, y0, xb, STAIR_LAND, T_FZ, mat="M_IntWoodFloorDark", seam=VOID)
     # flight 1 (door side) climbs to the half landing along the back wall, flight 2 (gable side) climbs back
     _room_wainscot(mb, xa, y0, xb, y1, U_FZ, 1.0, gaps={"s": [(0.0, 1.6)] if sx > 0 else [(xb - xa - 1.6, xb - xa)]})
-    _flight(mb, nc, xi + sx * 0.6, STAIR_LAND, U_FZ, zm, 90.0, 1.05, skip=(4,), rail_side=-sx, rail_gap=(),
-            mat="M_DarkWood")
-    mb.box_mm((xa, STAIR_LAND + 2.8 - 0.02, zm - 0.2), (xb, y1, zm), ROT, mats={"+z": "M_IntWoodFloorDark"})
-    _flight(mb, nc, xo - sx * 0.6, STAIR_LAND + 2.8, zm, T_FZ, -90.0, 1.05, skip=(6,), rail_side=-sx, rail_gap=(6, 9),
-            mat="M_DarkWood")
+    n1, _ = _flight(mb, nc, xi + sx * 0.6, STAIR_LAND, U_FZ, zm, 90.0, 1.05, skip=(4,), rail_side=-sx,
+                    rail_gap=(), mat="M_DarkWood", run=STAIR_RUN)
+    run_l = n1 * STAIR_RUN                  # length of a flight (2.4 m)
+    mb.box_mm((xa, STAIR_LAND + run_l - 0.02, zm - 0.2), (xb, y1, zm), ROT, mats={"+z": "M_IntWoodFloorDark"})
+    _flight(mb, nc, xo - sx * 0.6, STAIR_LAND + run_l, zm, T_FZ, -90.0, 1.05, skip=(6,), rail_side=-sx,
+            rail_gap=(6, 9), mat="M_DarkWood", run=STAIR_RUN)
     for xx in (xi + sx * 0.08, xo - sx * 0.08):
         mb.box((xx, y1 - 0.08, (U_FZ + zm) / 2), (0.12, 0.12, zm - U_FZ), ROT)
     _rail_line(mb, [(xi + sx * 0.05, STAIR_LAND + 0.04), (xo - sx * 1.15, STAIR_LAND + 0.04)], T_FZ)
-    _rail_line(mb, [(xi + sx * 1.2, STAIR_LAND + 2.85), (xo - sx * 1.2, STAIR_LAND + 2.85)], zm)
+    _rail_line(mb, [(xi + sx * 1.2, STAIR_LAND + run_l + 0.05), (xo - sx * 1.2, STAIR_LAND + run_l + 0.05)], zm)
     for (fl, zz) in ((FL2, U_FZ), (FL3, T_FZ)):
         _cobwebs(nc, xa, y0, xb, y1, fl["top"] - 0.28, rng, size=(0.6, 1.0))
         _peel(nc, (xb, y1), (xa, y1), zz + 0.4, fl["top"], rng, n=6)
@@ -2332,7 +2366,7 @@ def _flight(mb, nc, x, y, z0, z1, yaw, width, skip=(), mat=ROT, run=0.28, rail_s
             mb.beam((-0.05, s * (width / 2 + 0.03), -0.12), (L, s * (width / 2 + 0.03), z1 - z0 - 0.12), 0.06, 0.28,
                     "M_DarkWood")
         yy = rail_side * (width / 2 + 0.03)
-        for k in range(0, n + 1, 3):
+        for k in range(0, n, 3):     # (not past the top tread: a post there stood in the way off the flight)
             if k in rail_gap:
                 continue
             mb.box((run * k + 0.1, yy, rise * k + 0.45), (0.05, 0.05, 0.9), "M_DarkWood")
@@ -2404,7 +2438,7 @@ def _tower_rooms(aset, mb, nc, rng):
     _flight(mb, nc, FLIGHT_A[0], FLIGHT_A[1], TFL[0], TFL[1], 90.0, 1.0, skip=(6, 14), rail_gap=())
     for xw in (-2.2, 2.2):
         _win_inside(mb, nc, xw, y0, 180.0, 1.2, 8.6, 1.8, rng)
-    _beams(mb, x0, y0, x1, y1, TCEIL[0], step=1.9, along="x")
+    _beams(mb, x0, y0, x1, y1, TCEIL[0], step=1.9, along="x", holes=[KEEPER_HOLE])
     _peel(nc, (x1, y1), (x0, y1), z + 0.3, TCEIL[0], rng, n=5)
     _cobwebs(nc, x0, y0, x1, y1, TCEIL[0] - 0.28, rng, size=(0.6, 1.1))
     # stacked school desks, dust-sheeted sofa and chairs, crates, rolled carpets, leaning portraits
@@ -2449,12 +2483,16 @@ def _tower_rooms(aset, mb, nc, rng):
 
     # ---- the clock keeper's room
     z = TFL[1]
-    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT,
-           holes=[(2.85, -8.0, x1, -4.02)])
+    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT, holes=[KEEPER_HOLE])
     DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, TCEIL[1], style="ruin", seed=61)
-    _rail_line(mb, [(2.8, -4.05), (2.8, -8.05), (x1 - 0.05, -8.05)], z)
+    kh = KEEPER_HOLE
+    # (stops 0.3 m short of the top of the flight, where the treads are level with the floor: the way off the
+    # flight to the room passes between its end and the wall)
+    _rail_line(mb, [(kh[0] - 0.05, kh[3] - 0.3), (kh[0] - 0.05, kh[1] - 0.05), (x1 - 0.05, kh[1] - 0.05)], z)
     _flight(mb, nc, FLIGHT_B[0], FLIGHT_B[1], TFL[1], TFL[2], -90.0, 1.0, skip=(9, 10, 16), rail_gap=(15, 18))
-    rbox(nc, (FLIGHT_B[0], FLIGHT_B[1] - 0.28 * 9.9, z + 0.181 * 10 + 0.0), (0.7, 0.24, 0.03), ROT)   # plank bridge
+    # plank bridge over the two missing treads - collision: in the no-collision mesh it was not there for the
+    # character, which then faced a 0.54 m step over a 0.6 m gap
+    rbox(mb, (FLIGHT_B[0], FLIGHT_B[1] - 0.28 * 9.9, z + 0.181 * 10 + 0.0), (0.7, 0.24, 0.03), ROT)
     for xw in (-1.0, 1.0):
         _win_inside(mb, nc, xw, y0, 180.0, 0.8, 12.6, 2.2, rng)
     _win_inside(mb, nc, x1, -7.8, -90.0, 1.2, 13.5, 1.6, rng)
@@ -2492,10 +2530,10 @@ def _tower_rooms(aset, mb, nc, rng):
 
     # ---- the clockwork room: stopped at the hour the students vanished
     z = TFL[2]
-    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT,
-           holes=[(x0, -8.98, -2.85, -5.3)])
+    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT, holes=[CLOCK_HOLE])
     DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, TCEIL[2], style="ruin", seed=62)
-    _rail_line(mb, [(x0 + 0.05, -5.25), (-2.8, -5.25), (-2.8, -8.9)], z)
+    ch = CLOCK_HOLE
+    _rail_line(mb, [(x0 + 0.05, ch[3] + 0.05), (ch[2] + 0.05, ch[3] + 0.05), (ch[2] + 0.05, ch[1] + 0.3)], z)
     for (wx, wy, yaw) in ((x1, -7.5, -90.0), (x1, -5.5, -90.0), (x0, -7.5, 90.0), (x0, -5.5, 90.0),
                           (1.0, y1, 0.0), (-1.0, y1, 0.0)):
         _win_inside(mb, nc, wx, wy, yaw, 0.8, 16.0, 2.6, rng, curtain=False)
@@ -2510,7 +2548,11 @@ def _tower_rooms(aset, mb, nc, rng):
             mb.beam((0, 0, 0.06), (math.cos(a) * 1.25, math.sin(a) * 1.25, 0.06), 0.05, 0.05, RUST)
         mb.box((0, 0, 0.2), (0.4, 0.4, 0.3), "M_DarkMetal")
     mov = (0.4, -6.7)
-    mb.beam((0.0, y0 + 0.3, 17.6), (mov[0] - 0.2, mov[1] - 0.5, z + 1.15), 0.05, 0.05, "M_DarkMetal")
+    # drive rod: level out of the dial (2 m over the floor), then down into the movement - run straight down
+    # across the room it hung 1.2 - 2 m up and closed the stair landing off from the rest of the room
+    rod_top = (mov[0] - 0.2, mov[1] - 0.5, 17.6)
+    mb.beam((0.0, y0 + 0.3, 17.6), rod_top, 0.05, 0.05, "M_DarkMetal")
+    mb.beam(rod_top, (mov[0] - 0.2, mov[1] - 0.5, z + 1.15), 0.05, 0.05, "M_DarkMetal")
     # the movement: iron cage frame with wheels, escapement, barrels, pendulum
     fx, fy, fw, fd, fh = mov[0], mov[1], 1.8, 1.0, 1.3
     with mb.at((fx, fy, z)):
@@ -2631,7 +2673,7 @@ def _store_extras(aset, mb, nc, rng, z):
 def _keeper_extras(aset, mb, nc, rng, z):
     x0, y0, x1, y1 = TIN
     _room_wainscot(mb, x0, y0, x1, y1, z, 0.9)
-    _beams(mb, x0, y0, x1, y1, TCEIL[1], step=1.9, along="x")
+    _beams(mb, x0, y0, x1, y1, TCEIL[1], step=1.9, along="x", holes=[CLOCK_HOLE])
     # table with two chairs: the keeper played cards with someone
     aset.prop("SM_Int_RoundTableB", (-0.8, -5.6, z), 0.0)
     aset.prop("SM_Int_WoodChair", (-1.4, -5.3, z), -120.0)
@@ -3076,7 +3118,8 @@ def _ground_rooms(aset, mb, nc, rng):
             aset.prop("SM_Int_GrandfatherClock", (12.85, -5.0, FZ), 90.0)
             for k, y in enumerate((-6.6, -3.6, -2.4)):
                 _portrait(mb, nc, 12.6, y, FZ + 1.95 + 0.1 * (k % 2), 90.0, 0.7, 0.9, eyes=(k == 1), tilt=rng.uniform(-6, 6))
-            with mb.at((14.2, -2.1, FZ)):                                  # standard lamp, shade torn
+            with mb.at((15.0, -2.05, FZ)):                                 # standard lamp, shade torn (beside, not in
+                # front of, the doorway from the back room)
                 mb.cylinder((0, 0, 0), 0.18, 0.03, "M_TarnishedGold", seg=8)
                 mb.cylinder((0, 0, 0.03), 0.015, 1.5, "M_TarnishedGold", seg=6)
                 mb.cylinder((0, 0, 1.45), 0.25, 0.3, "M_DustSheet", seg=10, radius_top=0.15, cap_top=False, cap_bottom=False)
@@ -3090,6 +3133,10 @@ def _ground_rooms(aset, mb, nc, rng):
                 for j, dx in enumerate((-0.75, 0.0, 0.75)):
                     for s_ in (-1, 1):
                         if (j + k + (s_ > 0)) % 4 == 1:
+                            continue
+                        if s_ == (1 if k == 0 else -1):
+                            # none on the sides facing each other: there they left 0.3 m between their backs,
+                            # the only way past the tables to the cabinet at the far end of the room
                             continue
                         aset.prop("SM_Int_DiningChair", (-16.0 + dx, y + s_ * 0.95, FZ),
                                   (180.0 if s_ < 0 else 0.0) + rng.uniform(-15, 15))
